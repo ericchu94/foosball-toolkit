@@ -3,6 +3,7 @@
 mod kickertool;
 
 mod sources;
+mod sinks;
 
 use std::io;
 

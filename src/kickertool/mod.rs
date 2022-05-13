@@ -2,15 +2,15 @@ mod scraper;
 
 use rxrust::prelude::*;
 
-use crate::sources::browser::headless_chrome::HtmlObservable;
+use crate::{
+    sinks::{file::FileSink, Sink},
+    sources::browser::headless_chrome::HtmlObservable,
+};
 
 use self::scraper::KickertoolData;
 
-type N = impl FnMut(KickertoolData) + Send + Sync + 'static;
-type KickertoolDataObservable = impl SubscribeNext<'static, N>
-    + Clone
-    + Observable<Item = KickertoolData, Err = ()>
-    + SharedObservable;
+type KickertoolDataObservable =
+    impl Clone + Observable<Item = KickertoolData, Err = ()> + SharedObservable;
 
 pub struct Kickertool {
     team_subscriptions: [Option<Box<dyn SubscriptionLike>>; 2],
@@ -18,9 +18,7 @@ pub struct Kickertool {
     kickertool_data_observable: KickertoolDataObservable,
 }
 
-fn get_kickertool_data_observable(
-    html_observable: HtmlObservable,
-) -> KickertoolDataObservable {
+fn get_kickertool_data_observable(html_observable: HtmlObservable) -> KickertoolDataObservable {
     html_observable
         .flat_map(|html| observable::of_option(KickertoolData::from_html(html)))
         .tap(|data| println!("Parsed data: {:?}", data))
@@ -48,22 +46,26 @@ impl Kickertool {
     fn standings_subscribe(&mut self) {
         Self::unsubscribe(&mut self.standings_subscription);
 
+        let sink = FileSink::new("standings.txt");
+
         let s = self
             .kickertool_data_observable
             .clone()
-            .subscribe(move |data| {
-                let standings = data.standings;
-                for line in &standings {
-                    println!("{line}");
-                }
-                std::fs::write("standings.txt", standings.join("\n")).unwrap()
-            });
+            .map(|data| data.standings.join("\n"))
+            .distinct_until_changed()
+            .tap(move |standings| {
+                println!("{standings}");
+            })
+            .into_shared()
+            .subscribe(move |standings| sink.sink(standings));
 
         self.standings_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
     }
 
     fn team_subscribe(&mut self, number: usize) {
         self.team_unsubscribe(number);
+
+        let sink = FileSink::new(format!("team{number}.txt"));
 
         let s = self
             .kickertool_data_observable
@@ -76,11 +78,9 @@ impl Kickertool {
                 })
             })
             .distinct_until_changed()
+            .tap(move |team| println!("Team{number}: {team}"))
             .into_shared()
-            .subscribe(move |team| {
-                println!("Team{number}: {team}");
-                std::fs::write(format!("team{number}.txt"), team).unwrap();
-            });
+            .subscribe(move |standings| sink.sink(standings));
 
         let subscription = self.get_team_subscription_mut(number);
         *subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
