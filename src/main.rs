@@ -2,59 +2,24 @@
 
 mod kickertool;
 
-use std::{io, path::PathBuf, time::Duration};
+mod sources;
 
-use headless_chrome::{Browser, LaunchOptionsBuilder};
+use std::io;
 
-use crate::kickertool::Kickertool;
-
-fn get_browser() -> Browser {
-    let launch_options = LaunchOptionsBuilder::default()
-        .headless(false)
-        .user_data_dir(get_user_data_dir())
-        .idle_browser_timeout(Duration::from_secs(3600))
-        .build()
-        .unwrap();
-
-    Browser::new(launch_options).unwrap()
-}
-
-fn get_user_data_dir() -> Option<PathBuf> {
-    dirs_sys::known_folder_local_app_data().map(|mut path_buf| {
-        path_buf.push("Google");
-        path_buf.push("Chrome");
-        path_buf.push("User Data");
-        path_buf
-    })
-}
+use crate::{kickertool::Kickertool, sources::browser::headless_chrome::HeadlessChromeSource};
 
 fn main() {
     println!("Hello, world!");
 
-    let browser = get_browser();
+    let headless_chrome_source = HeadlessChromeSource::new();
+    let tab = headless_chrome_source.first_tab().unwrap();
 
-    let tab = browser.wait_for_initial_tab().unwrap();
     tab.navigate_to("https://app.kickertool.de").unwrap();
 
-    let kickertool = Kickertool::new(tab);
+    let kickertool = Kickertool::new(headless_chrome_source.html_observable());
 
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).unwrap();
 
     drop(kickertool);
-}
-
-#[cfg(test)]
-mod test {
-    use std::path::PathBuf;
-
-    use crate::get_user_data_dir;
-
-    #[test]
-    fn test_get_user_data_dir() {
-        assert_eq!(
-            PathBuf::from(r"C:\Users\Eric Chu\AppData\Local\Google\Chrome\User Data"),
-            get_user_data_dir().unwrap()
-        );
-    }
 }

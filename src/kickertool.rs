@@ -1,10 +1,8 @@
 mod scraper;
 
-use std::{sync::Arc, time::Duration};
-
-use futures::executor::ThreadPool;
-use headless_chrome::Tab;
 use rxrust::prelude::*;
+
+use crate::sources::browser::headless_chrome::HtmlObservable;
 
 use self::scraper::KickertoolData;
 
@@ -21,11 +19,9 @@ pub struct Kickertool {
 }
 
 fn get_kickertool_data_observable(
-    tab: Arc<Tab>,
-    scheduler: ThreadPool,
+    html_observable: HtmlObservable,
 ) -> KickertoolDataObservable {
-    observable::interval(Duration::from_secs(1), scheduler)
-        .flat_map(move |_| observable::of_option(get_html(tab.clone())))
+    html_observable
         .flat_map(|html| observable::of_option(KickertoolData::from_html(html)))
         .tap(|data| println!("Parsed data: {:?}", data))
         .distinct_until_changed()
@@ -34,21 +30,9 @@ fn get_kickertool_data_observable(
         .into_shared()
 }
 
-fn get_html(tab: Arc<Tab>) -> Option<String> {
-    let remote_object = tab
-        .evaluate("document.documentElement.outerHTML", false)
-        .ok()?;
-
-    let json = remote_object.value?;
-    let str = json.as_str()?;
-
-    Some(str.to_owned())
-}
-
 impl Kickertool {
-    pub fn new(tab: Arc<Tab>) -> Self {
-        let scheduler = ThreadPool::new().unwrap();
-        let kickertool_data_observable = get_kickertool_data_observable(tab, scheduler);
+    pub fn new(html_observable: HtmlObservable) -> Self {
+        let kickertool_data_observable = get_kickertool_data_observable(html_observable);
         let mut s = Self {
             team_subscriptions: [None, None],
             standings_subscription: None,
