@@ -4,42 +4,67 @@ use futures::executor::ThreadPool;
 use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use rxrust::prelude::*;
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct UrlHtml {
+    pub url: String,
+    pub html: String,
+}
+
 pub struct HeadlessChromeSource {
-    browser: Browser,
-    html_observable: HtmlObservable,
+    browser: Arc<Browser>,
+    url_html_observable: UrlHtmlObservable,
+}
+
+pub type UrlHtmlObservable =
+    impl Observable<Item = Arc<UrlHtml>, Err = ()> + Clone + SharedObservable;
+
+fn get_url_html_observable(browser: Arc<Browser>) -> UrlHtmlObservable {
+    let scheduler = ThreadPool::new().unwrap();
+
+    observable::interval(Duration::from_secs(1), scheduler)
+        .flat_map(move |_| {
+            observable::from_iter(
+                browser
+                    .get_tabs()
+                    .lock()
+                    .into_iter()
+                    .flat_map(|tabs| {
+                        tabs.iter()
+                            .cloned()
+                            .flat_map(|tab| {
+                                let url = tab.get_url();
+                                let html = get_html(tab);
+
+                                html.map(|html| Arc::new(UrlHtml { url, html }))
+                            })
+                            .collect::<Vec<Arc<UrlHtml>>>()
+                    })
+                    .collect::<Vec<Arc<UrlHtml>>>(),
+            )
+        })
+        .share()
+        .into_shared()
 }
 
 impl HeadlessChromeSource {
     pub fn new() -> Self {
-        let browser = get_browser();
-        let tab = browser.wait_for_initial_tab().unwrap();
-        let html_observable = get_html_observable(tab);
+        let browser = Arc::new(get_browser());
+        browser.wait_for_initial_tab().unwrap();
+        let url_html_observable = get_url_html_observable(browser.clone());
         Self {
             browser,
-            html_observable,
+            url_html_observable,
         }
     }
 
     pub fn first_tab(&self) -> Option<Arc<Tab>> {
         let tabs = self.browser.get_tabs().lock().ok()?;
-
         tabs.get(0).cloned()
     }
 
-    pub fn html_observable(&self) -> HtmlObservable {
-        self.html_observable.clone()
+    pub fn url_html_observable(&self) -> UrlHtmlObservable {
+        self.url_html_observable.clone()
     }
-}
-
-pub type HtmlObservable = impl Observable<Item = String, Err = ()> + Clone + SharedObservable;
-
-fn get_html_observable(tab: Arc<Tab>) -> HtmlObservable {
-    let scheduler = ThreadPool::new().unwrap();
-    observable::interval(Duration::from_secs(1), scheduler)
-        .flat_map(move |_| observable::of_option(get_html(tab.clone())))
-        .distinct_until_changed()
-        .share()
-        .into_shared()
 }
 
 fn get_html(tab: Arc<Tab>) -> Option<String> {

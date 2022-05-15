@@ -1,10 +1,12 @@
 mod scraper;
 
+use std::sync::Arc;
+
 use rxrust::prelude::*;
 
 use crate::{
     sinks::{file::FileSink, Sink},
-    sources::browser::headless_chrome::HtmlObservable,
+    sources::browser::headless_chrome::{UrlHtml, UrlHtmlObservable},
 };
 
 use self::scraper::KickertoolData;
@@ -18,8 +20,21 @@ pub struct Kickertool {
     kickertool_data_observable: KickertoolDataObservable,
 }
 
-fn get_kickertool_data_observable(html_observable: HtmlObservable) -> KickertoolDataObservable {
-    html_observable
+fn get_kickertool_data_observable(
+    url_html_observable: UrlHtmlObservable,
+) -> KickertoolDataObservable {
+    url_html_observable
+        .filter_map(|url_html: Arc<UrlHtml>| {
+            if url_html
+                .url
+                .starts_with("https://app.kickertool.de/tournament/")
+            {
+                Some(url_html.html.clone())
+            } else {
+                None
+            }
+        })
+        .distinct_until_changed()
         .flat_map(|html| observable::of_option(KickertoolData::from_html(html)))
         .tap(|data| println!("Parsed data: {:?}", data))
         .distinct_until_changed()
@@ -29,8 +44,8 @@ fn get_kickertool_data_observable(html_observable: HtmlObservable) -> Kickertool
 }
 
 impl Kickertool {
-    pub fn new(html_observable: HtmlObservable) -> Self {
-        let kickertool_data_observable = get_kickertool_data_observable(html_observable);
+    pub fn new(url_html_observable: UrlHtmlObservable) -> Self {
+        let kickertool_data_observable = get_kickertool_data_observable(url_html_observable);
         let mut s = Self {
             team_subscriptions: [None, None],
             standings_subscription: None,

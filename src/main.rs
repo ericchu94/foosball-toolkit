@@ -17,7 +17,7 @@ fn main() {
 
     tab.navigate_to("https://app.kickertool.de").unwrap();
 
-    let kickertool = Kickertool::new(headless_chrome_source.html_observable());
+    let kickertool = Kickertool::new(headless_chrome_source.url_html_observable());
 
     let mut buffer = String::new();
     io::stdin().read_line(&mut buffer).unwrap();
