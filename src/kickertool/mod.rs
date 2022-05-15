@@ -43,7 +43,7 @@ fn get_kickertool_data_observable(
         .into_shared()
 }
 
-type Table1Observable = impl Observable<Item = Table, Err = ()> + Clone + SharedObservable;
+type TableObservable = impl Observable<Item = Table, Err = ()> + Clone + SharedObservable;
 
 impl Kickertool {
     pub fn new(url_html_observable: UrlHtmlObservable) -> Self {
@@ -79,7 +79,7 @@ impl Kickertool {
         self.standings_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
     }
 
-    fn get_table_observable(&self, number: u8) -> Table1Observable {
+    fn get_table_observable(&self, number: u8) -> TableObservable {
         self.kickertool_data_observable
             .clone()
             .filter_map(move |data: KickertoolData| {
