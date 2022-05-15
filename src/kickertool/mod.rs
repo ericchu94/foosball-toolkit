@@ -9,7 +9,7 @@ use crate::{
     sources::browser::headless_chrome::{UrlHtml, UrlHtmlObservable},
 };
 
-use self::scraper::KickertoolData;
+use self::scraper::{KickertoolData, Table};
 
 type KickertoolDataObservable =
     impl Clone + Observable<Item = KickertoolData, Err = ()> + SharedObservable;
@@ -42,6 +42,8 @@ fn get_kickertool_data_observable(
         .share()
         .into_shared()
 }
+
+type Table1Observable = impl Observable<Item = Table, Err = ()> + Clone + SharedObservable;
 
 impl Kickertool {
     pub fn new(url_html_observable: UrlHtmlObservable) -> Self {
@@ -77,20 +79,25 @@ impl Kickertool {
         self.standings_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
     }
 
+    fn get_table1_observable(&self) -> Table1Observable {
+        self.kickertool_data_observable
+            .clone()
+            .filter_map(|data: KickertoolData| {
+                data.tables.into_iter().find(|table| table.number == 1)
+            })
+    }
+
     fn team_subscribe(&mut self, number: usize) {
         self.team_unsubscribe(number);
 
         let sink = FileSink::new(format!("team{number}.txt"));
 
         let s = self
-            .kickertool_data_observable
-            .clone()
-            .flat_map(move |data| {
-                observable::of_option(match number {
-                    1 => data.team1,
-                    2 => data.team2,
-                    _ => unreachable!(),
-                })
+            .get_table1_observable()
+            .map(move |data| match number {
+                1 => data.team1,
+                2 => data.team2,
+                _ => unreachable!(),
             })
             .distinct_until_changed()
             .tap(move |team| println!("Team{number}: {team}"))

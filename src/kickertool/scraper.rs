@@ -2,9 +2,8 @@ use scraper::{ElementRef, Html, Selector};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct KickertoolData {
-    pub team1: Option<String>,
-    pub team2: Option<String>,
     pub standings: Vec<String>,
+    pub tables: Vec<Table>,
 }
 
 impl KickertoolData {
@@ -12,15 +11,6 @@ impl KickertoolData {
         let html = html.as_ref();
 
         let html = Html::parse_document(html);
-
-        let mut teams = (1..=2)
-            .map(|number| {
-                let selector = format!(".playlist-row.active .team{number}");
-                let selector = Selector::parse(&selector).unwrap();
-                let team = html.select(&selector).next().map(inner_text);
-                team
-            })
-            .collect::<Vec<Option<String>>>();
 
         let standings = {
             let selector = Selector::parse(".tournament-right .table-row").unwrap();
@@ -41,11 +31,35 @@ impl KickertoolData {
                 .collect()
         };
 
-        Some(KickertoolData {
-            team1: teams[0].take(),
-            team2: teams[1].take(),
-            standings,
-        })
+        let tables = {
+            let selector = Selector::parse(".playlist-row.active").unwrap();
+            html.select(&selector)
+                .map(|table| Table::from_element(&table))
+                .collect()
+        };
+
+        Some(KickertoolData { standings, tables })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+pub struct Table {
+    pub number: u8,
+    pub team1: String,
+    pub team2: String,
+}
+
+impl Table {
+    fn from_element(table: &ElementRef) -> Self {
+        let number = get_table_number(table);
+        let team1 = get_team(table, 1);
+        let team2 = get_team(table, 2);
+
+        Self {
+            number,
+            team1,
+            team2,
+        }
     }
 }
 
@@ -57,4 +71,16 @@ fn inner_text(element: ElementRef) -> String {
         acc.push_str(s.trim());
         acc
     })
+}
+
+fn get_team(table: &ElementRef, number: u8) -> String {
+    let selector = Selector::parse(&format!(".team{number}")).unwrap();
+    let team = table.select(&selector).next().map(inner_text);
+    team.unwrap()
+}
+
+fn get_table_number(table: &ElementRef) -> u8 {
+    let selector = Selector::parse("kt-table-name span").unwrap();
+    let number = table.select(&selector).next().map(inner_text);
+    number.unwrap().parse().unwrap()
 }
