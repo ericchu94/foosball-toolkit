@@ -16,9 +16,6 @@ pub fn Next(props: &NextProps) -> Html {
             .next {
                 padding: 25px;
             }
-            .next li {
-                font-size: 36px;
-            }
             "}</style>
             <div class="next">
                 <h1>{"Next Matches"}</h1>

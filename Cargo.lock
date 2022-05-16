@@ -1801,6 +1801,7 @@ dependencies = [
  "reqwest",
  "rxrust 1.0.0-alpha.3 (git+https://github.com/rxRust/rxRust)",
  "wasm-bindgen-futures",
+ "web-sys",
  "yew",
 ]
 

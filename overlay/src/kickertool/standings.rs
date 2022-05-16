@@ -15,9 +15,6 @@ pub fn Standings(props: &StandingsProps) -> Html {
             .standings {
                 padding: 25px;
             }
-            .standings li {
-                font-size: 36px;
-            }
             "}</style>
             <div class="standings">
                 <h1>{"Standings"}</h1>
