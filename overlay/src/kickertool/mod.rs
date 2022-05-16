@@ -1,7 +1,28 @@
+use kickertool_data::*;
+use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+
+async fn get_kickertool_data() -> KickertoolData {
+    reqwest::get("http://localhost:8000/data")
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap()
+}
 
 #[function_component]
 pub fn Kickertool() -> Html {
+    let kickertool_data = use_state(KickertoolData::default);
+
+    {
+        let kickertool_data = kickertool_data.clone();
+        spawn_local(async move {
+            let data = get_kickertool_data().await;
+            kickertool_data.set(data);
+        });
+    }
+
     html! {
         <>
             <style>{"
@@ -39,7 +60,7 @@ pub fn Kickertool() -> Html {
             "}</style>
             <div class="grid">
                 <div class="window">
-                    {"Kickertool"}
+                    {format!("{:?}", kickertool_data)}
                 </div>
                 <div class="status">
                     {"status"}
