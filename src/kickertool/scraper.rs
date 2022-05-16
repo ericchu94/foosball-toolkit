@@ -2,6 +2,7 @@ use scraper::{ElementRef, Html, Selector};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct KickertoolData {
+    pub tournament_name: String,
     pub standings: Vec<String>,
     pub tables: Vec<Table>,
     pub next_matches: Vec<Match>,
@@ -27,7 +28,10 @@ impl KickertoolData {
 
         let next_matches = vec![];
 
+        let tournament_name = String::new();
+
         Some(KickertoolData {
+            tournament_name,
             standings,
             tables,
             next_matches,
@@ -58,7 +62,10 @@ impl KickertoolData {
                 .collect()
         };
 
+        let tournament_name = select_inner_text(&html.root_element(), "h1");
+
         Some(KickertoolData {
+            tournament_name,
             standings,
             tables,
             next_matches,
