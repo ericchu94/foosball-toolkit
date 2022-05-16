@@ -1,7 +1,9 @@
+cargo-features = ["per-package-target"]
 [package]
 name = "overlay"
 version = "0.1.0"
 edition = "2021"
+default-target = "wasm32-unknown-unknown"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,3 +12,4 @@ yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
 reqwest = { version = "0.11.10", features = ["json"] }
 wasm-bindgen-futures = "0.4.30"
 kickertool-data = { path = "../kickertool-data" }
+rxrust = { git = "https://github.com/rxRust/rxRust", features = ["wasm-scheduler"] }

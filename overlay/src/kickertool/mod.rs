@@ -1,5 +1,7 @@
+use std::time::Duration;
+
 use kickertool_data::*;
-use wasm_bindgen_futures::spawn_local;
+use rxrust::prelude::*;
 use yew::prelude::*;
 
 async fn get_kickertool_data() -> KickertoolData {
@@ -17,10 +19,18 @@ pub fn Kickertool() -> Html {
 
     {
         let kickertool_data = kickertool_data.clone();
-        spawn_local(async move {
-            let data = get_kickertool_data().await;
-            kickertool_data.set(data);
-        });
+        use_effect_with_deps(move |_| {
+            let mut subscription = observable::interval(Duration::from_secs(1), LocalSpawner {})
+                .flat_map(move |_| observable::from_future(get_kickertool_data(), LocalSpawner {}))
+                .distinct_until_changed()
+                .subscribe(move |data| {
+                    kickertool_data.set(data);
+                });
+
+            move || {
+                subscription.unsubscribe();
+            }
+        }, ());
     }
 
     html! {
@@ -60,7 +70,7 @@ pub fn Kickertool() -> Html {
             "}</style>
             <div class="grid">
                 <div class="window">
-                    {format!("{:?}", kickertool_data)}
+                    {format!("{:?}", *kickertool_data)}
                 </div>
                 <div class="status">
                     {"status"}
