@@ -2,6 +2,7 @@ mod scraper;
 
 use std::{collections::HashMap, sync::Arc};
 
+use kickertool_data::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use rxrust::prelude::*;
@@ -11,7 +12,7 @@ use crate::{
     sources::browser::headless_chrome::{UrlHtml, UrlHtmlObservable},
 };
 
-use self::scraper::{KickertoolData, Table};
+use self::scraper::kickertool_data_from_qualification_display;
 
 type KickertoolDataObservable =
     impl Clone + Observable<Item = KickertoolData, Err = ()> + SharedObservable;
@@ -39,7 +40,7 @@ fn get_kickertool_data_observable(
             }
         })
         .distinct_until_changed()
-        .flat_map(|html| observable::of_option(KickertoolData::from_qualification_display(html)))
+        .flat_map(|html| observable::of_option(kickertool_data_from_qualification_display(html)))
         .tap(|data| println!("Parsed data: {:?}", data))
         .distinct_until_changed()
         .tap(|data| println!("Distinct data: {:?}", data))

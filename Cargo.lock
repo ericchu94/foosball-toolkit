@@ -1460,12 +1460,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kickertool-data"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "kickertool-driver"
 version = "0.1.0"
 dependencies = [
  "dirs-sys",
  "futures",
  "headless_chrome",
+ "kickertool-data",
  "lazy_static",
  "regex",
  "reqwest",
