@@ -5,12 +5,19 @@ use yew::prelude::*;
 pub struct StatusProps {
     pub r#match: Match,
     pub font_size: u16,
+    pub swap_sides: bool,
 }
 
 #[function_component]
 pub fn Status(props: &StatusProps) -> Html {
     let r#match = &props.r#match;
     let font_size = props.font_size;
+
+    let (team1, team2) = if props.swap_sides {
+        (&r#match.team2, &r#match.team1)
+    } else {
+        (&r#match.team1, &r#match.team2)
+    };
 
     html! {
         <>
@@ -35,8 +42,8 @@ pub fn Status(props: &StatusProps) -> Html {
             }}
             ")}</style>
             <div class="status">
-                <div class="status-team1">{&r#match.team1}</div>
-                <div class="status-team2">{&r#match.team2}</div>
+                <div class="status-team1">{team1}</div>
+                <div class="status-team2">{team2}</div>
             </div>
         </>
     }

@@ -89,7 +89,17 @@ pub fn Kickertool() -> Html {
         })
     };
 
-    let match1 = kickertool_data
+    let swap_sides = use_state(|| false);
+
+    let swap_sides_on_input = {
+        let swap_sides = swap_sides.clone();
+        Callback::from(move |e: InputEvent| {
+            let target = e.target_unchecked_into::<HtmlInputElement>();
+            swap_sides.set(target.checked());
+        })
+    };
+
+    let r#match = kickertool_data
         .tables
         .iter()
         .find(|table| table.number == *table_number)
@@ -171,6 +181,10 @@ pub fn Kickertool() -> Html {
                     <label for="status-font-size">{"Status Font Size (px): "}</label>
                     <input id="status-font-size" type="number" value={status_font_size.to_string()} oninput={status_font_size_on_input} />
                 </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="swap-sides" type="checkbox" checked={*swap_sides} oninput={swap_sides_on_input} />
+                    <label class="form-check-label" for="swap-sides">{"Swap Sides"}</label>
+                </div>
                 <div>
                     <label for="headings-font-size">{"Headings Font Size (px): "}</label>
                     <input id="headings-font-size" type="number" value={headings_font_size.to_string()} oninput={headings_font_size_on_input} />
@@ -184,7 +198,7 @@ pub fn Kickertool() -> Html {
                     </div>
                 </div>
                 <div class="kt-status">
-                    <Status r#match={match1} font_size={*status_font_size} />
+                    <Status swap_sides={*swap_sides} {r#match} font_size={*status_font_size} />
                 </div>
                 <div class="kt-standings">
                     <Standings {standings} />
