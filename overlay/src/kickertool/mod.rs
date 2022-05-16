@@ -1,3 +1,4 @@
+mod standings;
 mod status;
 
 use std::time::Duration;
@@ -6,6 +7,7 @@ use kickertool_data::*;
 use rxrust::prelude::*;
 use yew::prelude::*;
 
+use standings::Standings;
 use status::Status;
 
 async fn get_kickertool_data() -> KickertoolData {
@@ -51,6 +53,8 @@ pub fn Kickertool() -> Html {
         .cloned()
         .unwrap_or_default();
 
+    let standings = kickertool_data.standings.clone();
+
     html! {
         <>
             <style>{"
@@ -94,6 +98,7 @@ pub fn Kickertool() -> Html {
                     <Status r#match={match1} />
                 </div>
                 <div class="kt-standings">
+                    <Standings standings={standings} />
                 </div>
                 <div class="kt-next">
                 </div>
