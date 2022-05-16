@@ -16,7 +16,7 @@ pub fn Status(props: &StatusProps) -> Html {
             .status {
                 display: grid;
                 height: 100%;
-                grid-template-columns: 40% auto 40%;
+                grid-template-columns: 50% auto 50%;
             }
             .status > div {
                 align-self: center;
