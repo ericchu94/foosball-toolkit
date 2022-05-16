@@ -969,8 +969,10 @@ dependencies = [
  "headless_chrome",
  "lazy_static",
  "regex",
+ "reqwest",
  "rxrust",
  "scraper",
+ "serde",
 ]
 
 [[package]]

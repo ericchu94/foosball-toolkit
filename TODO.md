@@ -22,6 +22,7 @@
 
 * [ ] Code coverage
 * [ ] Fix main startup / shutdown
+* [ ] Async traits
 
 ## integrations
 

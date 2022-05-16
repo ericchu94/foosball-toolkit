@@ -7,7 +7,7 @@ use regex::Regex;
 use rxrust::prelude::*;
 
 use crate::{
-    sinks::{file::FileSink, Sink},
+    sinks::{file::FileSink, Sink, http_post::HttpPostSink},
     sources::browser::headless_chrome::{UrlHtml, UrlHtmlObservable},
 };
 
@@ -20,6 +20,7 @@ pub struct Kickertool {
     team_subscriptions: HashMap<(u8, usize), Box<dyn SubscriptionLike>>,
     standings_subscription: Option<Box<dyn SubscriptionLike>>,
     kickertool_data_observable: KickertoolDataObservable,
+    data_subscription: Option<Box<dyn SubscriptionLike>>,
 }
 
 fn get_kickertool_data_observable(
@@ -55,12 +56,27 @@ impl Kickertool {
             team_subscriptions: HashMap::new(),
             standings_subscription: None,
             kickertool_data_observable,
+            data_subscription: None,
         };
         s.standings_subscribe();
         s.team_subscribe(1, 1);
         s.team_subscribe(1, 2);
+        s.data_subscribe();
 
         s
+    }
+    fn data_subscribe(&mut self) {
+        Self::unsubscribe(self.data_subscription.as_mut());
+
+        let sink = HttpPostSink::new("http://localhost:8000/data");
+
+        let s = self
+            .kickertool_data_observable
+            .clone()
+            .into_shared()
+            .subscribe(move |data| sink.sink(data));
+
+            self.data_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
     }
 
     fn standings_subscribe(&mut self) {

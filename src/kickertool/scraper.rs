@@ -1,6 +1,7 @@
 use scraper::{ElementRef, Html, Selector};
+use serde::Serialize;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize)]
 pub struct KickertoolData {
     pub tournament_name: String,
     pub standings: Vec<String>,
@@ -73,7 +74,7 @@ impl KickertoolData {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize)]
 pub struct Table {
     pub number: u8,
     pub r#match: Match,
@@ -97,7 +98,7 @@ impl Table {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize)]
 pub struct Match {
     pub team1: String,
     pub team2: String,
