@@ -1,5 +1,6 @@
 mod standings;
 mod status;
+mod next;
 
 use std::time::Duration;
 
@@ -9,6 +10,7 @@ use yew::prelude::*;
 
 use standings::Standings;
 use status::Status;
+use next::Next;
 
 async fn get_kickertool_data() -> KickertoolData {
     reqwest::get("http://localhost:8000/data")
@@ -55,6 +57,8 @@ pub fn Kickertool() -> Html {
 
     let standings = kickertool_data.standings.clone();
 
+    let next_matches = kickertool_data.next_matches.clone();
+
     html! {
         <>
             <style>{"
@@ -63,6 +67,7 @@ pub fn Kickertool() -> Html {
                 display: grid;
                 grid-template-columns: auto 20%;
                 grid-template-rows: 40% 40% 20%;
+                font-family: sans-serif;
             }
             .kt-window {
                 grid-column: 1;
@@ -98,9 +103,10 @@ pub fn Kickertool() -> Html {
                     <Status r#match={match1} />
                 </div>
                 <div class="kt-standings">
-                    <Standings standings={standings} />
+                    <Standings {standings} />
                 </div>
                 <div class="kt-next">
+                    <Next {next_matches} />
                 </div>
                 <div class="kt-logo">
                 </div>

@@ -13,7 +13,10 @@ pub fn Standings(props: &StandingsProps) -> Html {
         <>
             <style>{"
             .standings {
-                padding: 10px;
+                padding: 25px;
+            }
+            .standings li {
+                font-size: 36px;
             }
             "}</style>
             <div class="standings">
