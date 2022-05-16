@@ -2,4 +2,5 @@
 members = [
     "kickertool-driver",
     "echo-api",
+    "overlay",
 ]
