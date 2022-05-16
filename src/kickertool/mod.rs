@@ -98,8 +98,8 @@ impl Kickertool {
         let s = self
             .get_table_observable(1)
             .map(move |data| match team_number {
-                1 => data.team1,
-                2 => data.team2,
+                1 => data.r#match.team1,
+                2 => data.r#match.team2,
                 _ => unreachable!(),
             })
             .distinct_until_changed()
