@@ -42,6 +42,7 @@ fn get_url_html_observable(browser: Arc<Browser>) -> UrlHtmlObservable {
                     .collect::<Vec<Arc<UrlHtml>>>(),
             )
         })
+        .tap(|url_html| println!("Url: {}", url_html.url))
         .share()
         .into_shared()
 }

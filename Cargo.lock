@@ -967,6 +967,8 @@ dependencies = [
  "dirs-sys",
  "futures",
  "headless_chrome",
+ "lazy_static",
+ "regex",
  "rxrust",
  "scraper",
 ]

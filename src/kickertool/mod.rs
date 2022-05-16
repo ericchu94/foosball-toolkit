@@ -2,6 +2,8 @@ mod scraper;
 
 use std::{collections::HashMap, sync::Arc};
 
+use lazy_static::lazy_static;
+use regex::Regex;
 use rxrust::prelude::*;
 
 use crate::{
@@ -25,17 +27,18 @@ fn get_kickertool_data_observable(
 ) -> KickertoolDataObservable {
     url_html_observable
         .filter_map(|url_html: Arc<UrlHtml>| {
-            if url_html
-                .url
-                .starts_with("https://app.kickertool.de/tournament/")
-            {
+            lazy_static! {
+                static ref QUALIFICATION_DISPLAY_URL_REGEX: Regex =
+                    Regex::new(r"https://app\.kickertool\.de/display/#/.*/tournament").unwrap();
+            }
+            if QUALIFICATION_DISPLAY_URL_REGEX.is_match(&url_html.url) {
                 Some(url_html.html.clone())
             } else {
                 None
             }
         })
         .distinct_until_changed()
-        .flat_map(|html| observable::of_option(KickertoolData::from_html(html)))
+        .flat_map(|html| observable::of_option(KickertoolData::from_qualification_display(html)))
         .tap(|data| println!("Parsed data: {:?}", data))
         .distinct_until_changed()
         .tap(|data| println!("Distinct data: {:?}", data))

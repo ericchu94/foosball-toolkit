@@ -7,34 +7,40 @@ pub struct KickertoolData {
 }
 
 impl KickertoolData {
-    pub fn from_html<S: AsRef<str>>(html: S) -> Option<KickertoolData> {
+    pub fn from_playlist<S: AsRef<str>>(html: S) -> Option<KickertoolData> {
         let html = html.as_ref();
 
         let html = Html::parse_document(html);
 
         let standings = {
             let selector = Selector::parse(".tournament-right .table-row").unwrap();
-            html.select(&selector)
-                .flat_map(|row| {
-                    let pos = {
-                        let selector = Selector::parse(".pos").unwrap();
-                        let el = row.select(&selector).next()?;
-                        inner_text(el)
-                    };
-                    let name = {
-                        let selector = Selector::parse(".name").unwrap();
-                        let el = row.select(&selector).next()?;
-                        inner_text(el)
-                    };
-                    Some(format!("{pos} {name}"))
-                })
-                .collect()
+            html.select(&selector).map(|row| standing(&row)).collect()
         };
 
         let tables = {
             let selector = Selector::parse(".playlist-row.active").unwrap();
             html.select(&selector)
-                .map(|table| Table::from_element(&table))
+                .map(|table| Table::from_playlist_element(&table))
+                .collect()
+        };
+
+        Some(KickertoolData { standings, tables })
+    }
+
+    pub fn from_qualification_display<S: AsRef<str>>(html: S) -> Option<KickertoolData> {
+        let html = html.as_ref();
+
+        let html = Html::parse_document(html);
+
+        let standings = {
+            let selector = Selector::parse(".right-area .table-row").unwrap();
+            html.select(&selector).map(|row| standing(&row)).collect()
+        };
+
+        let tables = {
+            let selector = Selector::parse(".live .table-row").unwrap();
+            html.select(&selector)
+                .map(|table| Table::from_qualificaition_display_element(&table))
                 .collect()
         };
 
@@ -50,10 +56,12 @@ pub struct Table {
 }
 
 impl Table {
-    fn from_element(table: &ElementRef) -> Self {
-        let number = get_table_number(table);
-        let team1 = get_team(table, 1);
-        let team2 = get_team(table, 2);
+    fn from_playlist_element(element: &ElementRef) -> Self {
+        let number = select_inner_text(element, "kt-table-name span")
+            .parse()
+            .unwrap();
+        let team1 = select_inner_text(element, ".team1");
+        let team2 = select_inner_text(element, ".team2");
 
         Self {
             number,
@@ -61,6 +69,24 @@ impl Table {
             team2,
         }
     }
+
+    fn from_qualificaition_display_element(element: &ElementRef) -> Self {
+        let number = select_inner_text(element, ".table").parse().unwrap();
+        let team1 = select_inner_text(element, ".left");
+        let team2 = select_inner_text(element, ".right");
+
+        Self {
+            number,
+            team1,
+            team2,
+        }
+    }
+}
+
+fn select_inner_text(element: &ElementRef, selector: &str) -> String {
+    let selector = Selector::parse(selector).unwrap();
+    let text = element.select(&selector).next().map(inner_text);
+    text.unwrap()
 }
 
 fn inner_text(element: ElementRef) -> String {
@@ -73,14 +99,8 @@ fn inner_text(element: ElementRef) -> String {
     })
 }
 
-fn get_team(table: &ElementRef, number: u8) -> String {
-    let selector = Selector::parse(&format!(".team{number}")).unwrap();
-    let team = table.select(&selector).next().map(inner_text);
-    team.unwrap()
-}
-
-fn get_table_number(table: &ElementRef) -> u8 {
-    let selector = Selector::parse("kt-table-name span").unwrap();
-    let number = table.select(&selector).next().map(inner_text);
-    number.unwrap().parse().unwrap()
+fn standing(element: &ElementRef) -> String {
+    let pos = select_inner_text(element, ".pos");
+    let name = select_inner_text(element, ".name");
+    format!("{pos} {name}")
 }
