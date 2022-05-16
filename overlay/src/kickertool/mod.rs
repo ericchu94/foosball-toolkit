@@ -140,6 +140,13 @@ pub fn Kickertool() -> Html {
                 grid-column: 2;
                 grid-row: 3;
                 background: #bbb;
+                padding: 25px;
+                display: grid;
+            }
+            .kt-logo div {
+                place-self: center;
+                font-size: 48px;
+                text-align: center;
             }
             "}
             {format!("
@@ -184,6 +191,9 @@ pub fn Kickertool() -> Html {
                     <Next {next_matches} />
                 </div>
                 <div class="kt-logo">
+                    <div>
+                        <a href="https://github.com/ericchu94/foosball-toolkit">{"Foosball Toolkit"}</a>{" by Eric Chu"}
+                    </div>
                 </div>
             </div>
         </>
