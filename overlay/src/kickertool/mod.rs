@@ -1,8 +1,12 @@
+mod status;
+
 use std::time::Duration;
 
 use kickertool_data::*;
 use rxrust::prelude::*;
 use yew::prelude::*;
+
+use status::Status;
 
 async fn get_kickertool_data() -> KickertoolData {
     reqwest::get("http://localhost:8000/data")
@@ -19,67 +23,81 @@ pub fn Kickertool() -> Html {
 
     {
         let kickertool_data = kickertool_data.clone();
-        use_effect_with_deps(move |_| {
-            let mut subscription = observable::interval(Duration::from_secs(1), LocalSpawner {})
-                .flat_map(move |_| observable::from_future(get_kickertool_data(), LocalSpawner {}))
-                .distinct_until_changed()
-                .subscribe(move |data| {
-                    kickertool_data.set(data);
-                });
+        use_effect_with_deps(
+            move |_| {
+                let mut subscription =
+                    observable::interval(Duration::from_secs(1), LocalSpawner {})
+                        .flat_map(move |_| {
+                            observable::from_future(get_kickertool_data(), LocalSpawner {})
+                        })
+                        .distinct_until_changed()
+                        .subscribe(move |data| {
+                            kickertool_data.set(data);
+                        });
 
-            move || {
-                subscription.unsubscribe();
-            }
-        }, ());
+                move || {
+                    subscription.unsubscribe();
+                }
+            },
+            (),
+        );
     }
+
+    let match1 = kickertool_data
+        .tables
+        .iter()
+        .find(|table| table.number == 1)
+        .map(|table| &table.r#match)
+        .cloned()
+        .unwrap_or_default();
 
     html! {
         <>
             <style>{"
-            .grid {
+            .kt {
                 height: 100%;
                 display: grid;
                 grid-template-columns: auto 20%;
                 grid-template-rows: 40% 40% 20%;
             }
-            .window {
+            .kt-window {
                 grid-column: 1;
                 grid-row: 1 / 3;
                 background: #fff;
             }
-            .status {
+            .kt-status {
                 grid-column: 1;
                 grid-row: 3;
                 background: #eee;
             }
-            .standings {
+            .kt-standings {
                 grid-column: 2;
                 grid-row: 1;
                 background: #ddd;
             }
-            .next {
+            .kt-next {
                 grid-column: 2;
                 grid-row: 2;
                 background: #ccc;
             }
-            .logo {
+            .kt-logo {
                 grid-column: 2;
                 grid-row: 3;
                 background: #bbb;
             }
             "}</style>
-            <div class="grid">
+            <div class="kt">
                 <div class="window">
                     {format!("{:?}", *kickertool_data)}
                 </div>
-                <div class="status">
-                    {"status"}
+                <div class="kt-status">
+                    <Status r#match={match1} />
                 </div>
-                <div class="standings">
+                <div class="kt-standings">
                 </div>
-                <div class="next">
+                <div class="kt-next">
                 </div>
-                <div class="logo">
+                <div class="kt-logo">
                 </div>
             </div>
         </>
