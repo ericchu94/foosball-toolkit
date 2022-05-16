@@ -13,13 +13,13 @@ use standings::Standings;
 use status::Status;
 use next::Next;
 
-async fn get_kickertool_data() -> KickertoolData {
+async fn get_kickertool_data() -> Option<KickertoolData> {
     reqwest::get("http://localhost:8000/data")
         .await
-        .unwrap()
+        .ok()?
         .json()
         .await
-        .unwrap()
+        .ok()
 }
 
 #[function_component]
@@ -35,6 +35,7 @@ pub fn Kickertool() -> Html {
                         .flat_map(move |_| {
                             observable::from_future(get_kickertool_data(), LocalSpawner {})
                         })
+                        .flat_map(observable::of_option)
                         .distinct_until_changed()
                         .subscribe(move |data| {
                             kickertool_data.set(data);
@@ -114,6 +115,7 @@ pub fn Kickertool() -> Html {
                 grid-column: 1;
                 grid-row: 1 / 3;
                 background: #fff;
+                padding: 25px;
             }
             .kt-window * {
                 font-size: 48px;
