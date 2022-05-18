@@ -6,4 +6,5 @@ members = [
     "kickertool-data",
     "ktool",
     "fast",
+    "foos-db",
 ]
