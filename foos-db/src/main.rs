@@ -2,7 +2,7 @@ mod controllers;
 mod database;
 mod models;
 
-use actix_web::{web::Data, App, HttpServer, ResponseError};
+use actix_web::{web::Data, App, HttpServer, ResponseError, middleware::Logger};
 use database::Database;
 
 impl ResponseError for database::DatabaseError {}
@@ -13,6 +13,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .app_data(Data::new(database.clone()))
             .configure(controllers::config)
     })

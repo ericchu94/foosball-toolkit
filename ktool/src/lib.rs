@@ -1,8 +1,6 @@
-pub mod ktool;
+mod ktool;
 
-fn main() {
-    println!("Hello, world!");
-}
+pub use ktool::*;
 
 #[cfg(test)]
 mod test {
@@ -85,6 +83,8 @@ mod test {
                 }
             }
         };
+
+        println!("tournament: {}", tournament.name);
 
         println!("monster dyp");
 
