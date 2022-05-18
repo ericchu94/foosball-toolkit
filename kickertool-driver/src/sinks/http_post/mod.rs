@@ -1,4 +1,4 @@
-use reqwest::{blocking::Client, IntoUrl, Url};
+use reqwest::{blocking::Client, IntoUrl};
 use serde::Serialize;
 
 use super::Sink;

@@ -99,7 +99,7 @@ mod test {
             if let (Some(t1), Some(t2)) = (play.team1.as_ref(), play.team2.as_ref()) {
                 let players1 = get_players_from_team(&t1.id);
                 let players2 = get_players_from_team(&t2.id);
-                let winner = get_winner(&play);
+                let winner = get_winner(play);
 
                 println!(
                     "{:?} {:?} vs {:?}. Winner: {:?}",
@@ -126,7 +126,7 @@ mod test {
             if let (Some(t1), Some(t2)) = (play.team1.as_ref(), play.team2.as_ref()) {
                 let players1 = get_players_from_team(&t1.id);
                 let players2 = get_players_from_team(&t2.id);
-                let winner = get_winner(&play);
+                let winner = get_winner(play);
 
                 println!(
                     "{:?} {:?} vs {:?}. Winner: {:?}",
