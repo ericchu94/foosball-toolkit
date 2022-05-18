@@ -1,6 +1,6 @@
 mod ktool;
 
-use std::{collections::HashMap, iter};
+use std::{collections::HashMap};
 
 use actix_multipart::Multipart;
 use actix_web::{
@@ -17,8 +17,6 @@ use crate::{
 
 #[post("")]
 async fn import(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    println!("Test");
-
     let map = payload
         .map(Result::unwrap)
         .then(|field| async {
