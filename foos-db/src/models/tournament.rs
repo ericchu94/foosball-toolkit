@@ -1,9 +1,8 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct Player {
+pub struct Tournament {
     #[serde(default)]
     pub id: i32,
-    pub first_name: String,
-    pub last_name: String,
+    pub name: String,
 }

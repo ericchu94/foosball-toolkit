@@ -1,4 +1,4 @@
-use sqlx::{query_as, PgPool, query};
+use sqlx::{query, query_as, PgPool};
 use thiserror::Error;
 
 use crate::models::*;
@@ -32,7 +32,29 @@ impl Database {
     }
 
     pub async fn create_player(&self, player: Player) -> Result<()> {
-        query!("INSERT INTO player (name) VALUES ($1)", &player.name).execute(&self.pool).await?;
+        query!(
+            "INSERT INTO player (first_name, last_name) VALUES ($1, $2)",
+            player.first_name,
+            player.last_name
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_tournaments(&self) -> Result<Vec<Tournament>> {
+        let tournaments = query_as!(Tournament, "SELECT * FROM tournament")
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(tournaments)
+    }
+
+    pub async fn create_tournament(&self, tournament: Tournament) -> Result<()> {
+        query!("INSERT INTO tournament (name) VALUES ($1)", tournament.name)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }
