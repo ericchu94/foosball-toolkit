@@ -1,47 +1,12 @@
-use std::{collections::HashMap, iter};
+use std::iter;
 
-use actix_multipart::Multipart;
-use actix_web::{
-    post,
-    web::{self, Data, ServiceConfig},
-    HttpResponse, Responder, Result,
-};
-use futures::{stream, StreamExt};
+use actix_web::web::Data;
+use actix_web::Result;
 use time::OffsetDateTime;
 
-use crate::{
-    database::Database,
-    models::{Tournament, Winner, Match, Player},
-};
+use crate::{database::Database, models::*};
 
-#[post("")]
-async fn import(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    println!("Test");
-
-    let map = payload
-        .map(Result::unwrap)
-        .then(|field| async {
-            let name = field.name().to_owned();
-            let value = field
-                .map(Result::unwrap)
-                .flat_map(stream::iter)
-                .collect::<Vec<u8>>()
-                .await;
-            (name, value)
-        })
-        .collect::<HashMap<String, Vec<u8>>>()
-        .await;
-
-    let file = &map["file"];
-
-    let kt = parse(file)?;
-
-    import_kt(database, kt).await?;
-
-    Ok(HttpResponse::Ok())
-}
-
-async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Result<()> {
+pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Result<()> {
     let tournament = Tournament {
         name: kt.name,
         ..Default::default()
@@ -158,10 +123,6 @@ fn get_winner(play: &ktool::Play) -> Winner {
     }
 }
 
-fn parse(buffer: &[u8]) -> Result<ktool::Tournament> {
+pub fn parse(buffer: &[u8]) -> Result<ktool::Tournament> {
     Ok(serde_json::from_slice(buffer)?)
-}
-
-pub fn config(cfg: &mut ServiceConfig) {
-    cfg.service(web::scope("/import").service(import));
 }
