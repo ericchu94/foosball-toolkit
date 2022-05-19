@@ -2,18 +2,73 @@ use std::io::{BufReader, Cursor, Read, Seek};
 
 use actix_web::web::Data;
 use fast::TeamMatch;
+use futures::{stream, StreamExt};
 use time_tz::PrimitiveDateTimeExt;
 use zip::ZipArchive;
 
 use crate::{database::Database, models::*};
 
-use super::{ImportError::MissingField, ImportResult};
+use super::{
+    ImportError::{MissingField, MissingPlayer},
+    ImportResult,
+};
+
+async fn get_player_from_player_id(
+    database: Data<Database>,
+    f: &fast::Fast,
+    id: u32,
+) -> ImportResult<Player> {
+    let player = f
+        .registered_players
+        .iter()
+        .flat_map(|rp| rp.player_infos.iter())
+        .flat_map(|pi| &pi.player)
+        .chain(
+            f.temporary_license_people
+                .iter()
+                .flat_map(|tlp| tlp.itsf_member.iter())
+                .map(|im| &im.federation_member.player),
+        )
+        .find(|p| p.id == id);
+
+    if let Some(player) = player {
+        Ok(Player {
+            id: 0,
+            first_name: player.person.first_name.clone(),
+            last_name: player.person.last_name.clone(),
+        })
+    } else {
+        let pi_with_license = f
+            .registered_players
+            .iter()
+            .flat_map(|rp| rp.player_infos.iter())
+            .filter(|pi| pi.player_id.is_some() && pi.no_license.is_some())
+            .find(|pi| pi.player_id.unwrap() == id);
+
+        if let Some(pi) = pi_with_license {
+            let fast_player = database
+                .get_fast_player_by_license(pi.no_license.as_ref().unwrap())
+                .await?;
+            Ok(Player {
+                id: 0,
+                first_name: fast_player.first_name,
+                last_name: fast_player.last_name,
+            })
+        } else {
+            Err(MissingPlayer(id))
+        }
+    }
+}
 
 pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResult<()> {
-    let t = f.tournaments.ok_or(MissingField("tournaments"))?.tournament;
+    let t = &f
+        .tournaments
+        .as_ref()
+        .ok_or(MissingField("tournaments"))?
+        .tournament;
 
     let tournament = Tournament {
-        name: t.name,
+        name: t.name.clone(),
         source: String::from("fast"),
         ..Default::default()
     };
@@ -37,33 +92,10 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             .unwrap()
             .team;
 
-        let players = f
-            .registered_players
-            .iter()
-            .flat_map(|rp| rp.player_infos.iter())
-            .flat_map(|pi| &pi.player)
-            .chain(
-                f.temporary_license_people
-                    .iter()
-                    .flat_map(|tlp| tlp.itsf_member.iter())
-                    .map(|im| &im.federation_member.player),
-            )
-            .filter(|p| {
-                p.id == team.player1_id
-                    || if let Some(&player2_id) = team.player2_id.as_ref() {
-                        p.id == player2_id
-                    } else {
-                        false
-                    }
-            })
-            .map(|p| Player {
-                id: 0,
-                first_name: p.person.first_name.clone(),
-                last_name: p.person.last_name.clone(),
-            })
-            .collect::<Vec<Player>>();
+        let mut v = vec![team.player1_id];
+        v.extend(team.player2_id.iter());
 
-        players
+        v
     };
 
     let get_winner = |tm: &TeamMatch| {
@@ -86,10 +118,26 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
     };
 
     for tm in team_matches {
+        let f = &f;
+        let d = database.clone();
         let t1 = *tm.team1_id.as_ref().unwrap();
         let t2 = *tm.team2_id.as_ref().unwrap();
         let players1 = get_players_from_team(t1);
+        let players1 = stream::iter(players1.into_iter())
+            .then(|id| {
+                let database = d.clone();
+                async move { get_player_from_player_id(database, f, id).await.unwrap() }
+            })
+            .collect::<Vec<Player>>()
+            .await;
         let players2 = get_players_from_team(t2);
+        let players2 = stream::iter(players2.into_iter())
+            .then(|id| {
+                let database = d.clone();
+                async move { get_player_from_player_id(database, f, id).await.unwrap() }
+            })
+            .collect::<Vec<Player>>()
+            .await;
         let winner = get_winner(tm);
 
         let tz = time_tz::timezones::get_by_name(&t.time_zone).unwrap();

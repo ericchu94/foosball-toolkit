@@ -56,7 +56,7 @@ pub struct PlayerInfos {
     pub player: Option<Player>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "$unflatten=noLicense")]
-    pub no_license: Option<u32>,
+    pub no_license: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "$unflatten=playerId")]
     pub player_id: Option<u32>,
@@ -1146,7 +1146,6 @@ pub struct Country {
     pub priority_display: u32,
     #[serde(rename = "$unflatten=phonePrefix")]
     pub phone_prefix: String,
-
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]

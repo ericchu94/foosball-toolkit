@@ -167,4 +167,14 @@ impl Database {
 
         Ok(())
     }
+
+    pub async fn get_fast_player_by_license(&self, license: &str) -> Result<FastPlayer> {
+        Ok(query_as!(
+            FastPlayer,
+            "SELECT * FROM fast_player WHERE license = $1",
+            license,
+        )
+        .fetch_one(&self.pool)
+        .await?)
+    }
 }

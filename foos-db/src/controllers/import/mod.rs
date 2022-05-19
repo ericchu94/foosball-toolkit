@@ -31,6 +31,8 @@ pub enum ImportError {
     Zip(#[from] ZipError),
     #[error("missing field `{0}`")]
     MissingField(&'static str),
+    #[error("missing player with id `{0}`")]
+    MissingPlayer(u32),
 }
 
 impl ResponseError for ImportError {}
