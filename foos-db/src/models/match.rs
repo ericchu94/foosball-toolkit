@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use time::OffsetDateTime;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Match {
     #[serde(default)]
     pub id: i32,

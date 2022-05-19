@@ -177,4 +177,40 @@ impl Database {
         .fetch_one(&self.pool)
         .await?)
     }
+
+    pub async fn get_player_matches(&self) -> Result<Vec<PlayerMatch>> {
+        let player_matches = query_as_unchecked!(PlayerMatch, "SELECT * FROM player_match")
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(player_matches)
+    }
+
+    pub async fn get_player_matches_by_match_id(&self, match_id: i32) -> Result<Vec<PlayerMatch>> {
+        let player_matches = query_as_unchecked!(
+            PlayerMatch,
+            "SELECT * FROM player_match WHERE match_id = $1",
+            match_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(player_matches)
+    }
+
+    pub async fn get_matches(&self) -> Result<Vec<Match>> {
+        let matches = query_as_unchecked!(Match, "SELECT * FROM match ORDER BY timestamp")
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(matches)
+    }
+
+    pub async fn get_player_by_id(&self, id: i32) -> Result<Player> {
+        let player = query_as!(Player, "SELECT * FROM player WHERE id = $1", id)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(player)
+    }
 }
