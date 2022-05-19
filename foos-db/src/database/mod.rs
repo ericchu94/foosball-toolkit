@@ -154,4 +154,17 @@ impl Database {
 
         Ok(())
     }
+
+    pub async fn create_fast_player(&self, fast_player: FastPlayer) -> Result<()> {
+        query!(
+            "INSERT INTO fast_player (license, first_name, last_name) VALUES ($1, $2, $3)",
+            fast_player.license,
+            fast_player.first_name,
+            fast_player.last_name,
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
 }

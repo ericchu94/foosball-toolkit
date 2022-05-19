@@ -153,7 +153,7 @@ fn get_winner(play: &ktool::Play) -> Winner {
 
 pub fn parse<'a>(buffer: &'a mut &'a [u8]) -> ImportResult<fast::Fast> {
     let mut archive = read_archive(buffer)?;
-    let file = archive.by_name("outfrom.xml")?;
+    let file = archive.by_index(0)?;
 
     let reader = BufReader::new(file);
 
@@ -165,4 +165,37 @@ fn read_archive<'a>(buffer: &'a mut &'a [u8]) -> ImportResult<ZipArchive<impl Re
     let archive = ZipArchive::new(reader)?;
 
     Ok(archive)
+}
+
+pub async fn import_fast_init(database: Data<Database>, f: fast::Fast) -> ImportResult<()> {
+    let federation_members = f
+        .itsf_people
+        .iter()
+        .flat_map(|p| p.itsf_member.iter())
+        .chain(
+            f.federation_people
+                .iter()
+                .flat_map(|p| p.ffft_league.iter())
+                .flat_map(|l| l.ffft_club.iter())
+                .flat_map(|c| c.ffft_member.iter())
+                .map(|m| &m.itsf_member),
+        )
+        .map(|m| &m.federation_member);
+
+    for fm in federation_members {
+        let license = fm.no_license.clone();
+        let first_name = fm.player.person.first_name.clone();
+        let last_name = fm.player.person.last_name.clone();
+
+        let fast_player = FastPlayer {
+            id: 0,
+            license,
+            first_name,
+            last_name,
+        };
+
+        database.create_fast_player(fast_player).await?;
+    }
+
+    Ok(())
 }

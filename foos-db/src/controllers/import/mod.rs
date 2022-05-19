@@ -7,7 +7,7 @@ use actix_multipart::Multipart;
 use actix_web::{
     post,
     web::{self, Data, ServiceConfig},
-    HttpResponse, Responder, Result, ResponseError,
+    HttpResponse, Responder, ResponseError, Result,
 };
 use futures::{stream, StreamExt};
 use zip::result::ZipError;
@@ -83,6 +83,30 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
     Ok(HttpResponse::Ok())
 }
 
+async fn import_fast_init_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
+    let map = payload
+        .map(Result::unwrap)
+        .then(|field| async {
+            let name = field.name().to_owned();
+            let value = field
+                .map(Result::unwrap)
+                .flat_map(stream::iter)
+                .collect::<Vec<u8>>()
+                .await;
+            (name, value)
+        })
+        .collect::<HashMap<String, Vec<u8>>>()
+        .await;
+
+    let mut file = &map["file"];
+
+    let fast = fast::parse(&mut file.as_slice())?;
+
+    fast::import_fast_init(database, fast).await?;
+
+    Ok(HttpResponse::Ok())
+}
+
 #[post("/ktool")]
 async fn import_ktool(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
     import_ktool_impl(payload, database).await
@@ -91,6 +115,11 @@ async fn import_ktool(payload: Multipart, database: Data<Database>) -> Result<im
 #[post("/fast")]
 async fn import_fast(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
     import_fast_impl(payload, database).await
+}
+
+#[post("/fast-init")]
+async fn import_fast_init(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
+    import_fast_init_impl(payload, database).await
 }
 
 #[post("")]
@@ -103,6 +132,7 @@ pub fn config(cfg: &mut ServiceConfig) {
         web::scope("/import")
             .service(import)
             .service(import_ktool)
-            .service(import_fast),
+            .service(import_fast)
+            .service(import_fast_init),
     );
 }
