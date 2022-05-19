@@ -29,6 +29,8 @@ pub enum ImportError {
     Database(#[from] DatabaseError),
     #[error("zip error `{0}`")]
     Zip(#[from] ZipError),
+    #[error("missing field `{0}`")]
+    MissingField(&'static str),
 }
 
 impl ResponseError for ImportError {}

@@ -3,17 +3,14 @@ use std::io::{BufReader, Cursor, Read, Seek};
 use actix_web::web::Data;
 use fast::TeamMatch;
 use time_tz::PrimitiveDateTimeExt;
-use zip::{
-    read::{read_zipfile_from_stream, ZipFile},
-    ZipArchive,
-};
+use zip::ZipArchive;
 
 use crate::{database::Database, models::*};
 
-use super::ImportResult;
+use super::{ImportError::MissingField, ImportResult};
 
 pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResult<()> {
-    let t = f.tournaments.tournament;
+    let t = f.tournaments.ok_or(MissingField("tournaments"))?.tournament;
 
     let tournament = Tournament {
         name: t.name,
@@ -42,13 +39,13 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
 
         let players = f
             .registered_players
-            .player_infos
             .iter()
+            .flat_map(|rp| rp.player_infos.iter())
             .flat_map(|pi| &pi.player)
             .chain(
                 f.temporary_license_people
-                    .itsf_member
                     .iter()
+                    .flat_map(|tlp| tlp.itsf_member.iter())
                     .map(|im| &im.federation_member.player),
             )
             .filter(|p| {
