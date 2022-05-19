@@ -9,6 +9,7 @@ use crate::{database::Database, models::*};
 pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Result<()> {
     let tournament = Tournament {
         name: kt.name,
+        source: String::from("kickertool"),
         ..Default::default()
     };
     let tournament = database.get_or_create_tournament(tournament).await?;
@@ -58,7 +59,7 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
         let r#match = Match {
             id: 0,
             tournament_id: Some(tournament.id),
-            timestamp: OffsetDateTime::from_unix_timestamp(play.time_end.unwrap() as i64 / 1000),
+            timestamp: OffsetDateTime::from_unix_timestamp(play.time_end.unwrap() as i64 / 1000).unwrap(),
             winner,
         };
         
