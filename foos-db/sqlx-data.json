@@ -165,6 +165,57 @@
     },
     "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2)"
   },
+  "690415a543e09ec2086f933c17c567ea37d705bc0fc9867cfc48e5fe5c16c261": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tournament_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1 OFFSET $2"
+  },
   "6adfed5dd9c1ba7362c819bc3ff0b5e95d2296c32d8ab59b97596276147a1a3b": {
     "describe": {
       "columns": [
@@ -259,56 +310,6 @@
       }
     },
     "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2"
-  },
-  "aa430a095ec492463ea301019e1f1ec0692bc5d80cdd81141f998795c0af1721": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tournament_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "timestamp",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "winner",
-          "ordinal": 3,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "none",
-                  "team1",
-                  "team2",
-                  "draw"
-                ]
-              },
-              "name": "winner"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1"
   },
   "c00fecc2df44adfc0140910df926a62eb5cc19868d146b66fcc7841d92f2847f": {
     "describe": {
