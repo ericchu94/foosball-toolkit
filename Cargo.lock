@@ -1226,6 +1226,8 @@ dependencies = [
  "rand 0.8.5",
  "reqwest",
  "rxrust 1.0.0-alpha.3 (git+https://github.com/rxRust/rxRust)",
+ "serde",
+ "time 0.3.9",
  "yew",
 ]
 

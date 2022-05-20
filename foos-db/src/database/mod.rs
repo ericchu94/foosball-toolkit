@@ -69,6 +69,14 @@ impl Database {
         Ok(tournaments)
     }
 
+    pub async fn get_tournament_by_id(&self, id: i32) -> Result<Tournament> {
+        let tournament = query_as!(Tournament, "SELECT * FROM tournament WHERE id = $1", id)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(tournament)
+    }
+
     pub async fn create_tournament(&self, tournament: Tournament) -> Result<()> {
         query!(
             "INSERT INTO tournament (name, source) VALUES ($1, $2)",
@@ -201,7 +209,7 @@ impl Database {
     pub async fn get_matches(&self, limit: i32) -> Result<Vec<Match>> {
         let matches = query_as_unchecked!(
             Match,
-            "SELECT * FROM match ORDER BY timestamp LIMIT $1",
+            "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1",
             limit
         )
         .fetch_all(&self.pool)

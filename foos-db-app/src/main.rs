@@ -1,6 +1,12 @@
+#![feature(type_alias_impl_trait)]
+
 mod recent_matches;
 mod header;
 mod nav;
+mod models;
+mod match_component;
+mod hooks;
+mod player_name_component;
 
 use yew::prelude::*;
 
