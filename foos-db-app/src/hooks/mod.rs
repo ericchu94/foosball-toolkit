@@ -8,4 +8,5 @@ pub use use_player_matches::*;
 pub use use_player::*;
 pub use use_matches::*;
 
-const BASE_URL: &str = "https://foos-db.herokuapp.com";
+// const BASE_URL: &str = "https://foos-db.herokuapp.com";
+pub const BASE_URL: &str = "http://192.168.2.12:8888";

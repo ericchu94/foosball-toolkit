@@ -1225,13 +1225,19 @@ dependencies = [
 name = "foos-db-app"
 version = "0.1.0"
 dependencies = [
+ "futures",
  "getrandom 0.2.6",
+ "js-sys",
  "rand 0.8.5",
  "reqwest",
  "rxrust 1.0.0-alpha.3 (git+https://github.com/rxRust/rxRust)",
  "serde",
  "time 0.3.9",
+ "wasm-bindgen",
+ "wasm-streams",
+ "web-sys",
  "yew",
+ "yew-router",
 ]
 
 [[package]]
@@ -1535,6 +1541,7 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa5d6084efa4a2b182ef3a8649cb6506cb4843f22cf907c6e0a799944248ae90"
 dependencies = [
+ "futures-channel",
  "gloo-events",
  "js-sys",
  "wasm-bindgen",
@@ -2157,6 +2164,16 @@ name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
+
+[[package]]
+name = "mime_guess"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4192263c238a5f0d0c6bfd21f336a313a4ce1c450542449ca191bb657b4642ef"
+dependencies = [
+ "mime 0.3.16",
+ "unicase 2.6.0",
+]
 
 [[package]]
 name = "minimal-lexical"
@@ -3018,6 +3035,7 @@ dependencies = [
  "lazy_static",
  "log 0.4.17",
  "mime 0.3.16",
+ "mime_guess",
  "native-tls",
  "percent-encoding 2.1.0",
  "pin-project-lite",
@@ -3144,6 +3162,12 @@ dependencies = [
  "tokio",
  "uncased",
 ]
+
+[[package]]
+name = "route-recognizer"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afab94fb28594581f62d981211a9a4d53cc8130bbcbbb89a0440d9b8e81a7746"
 
 [[package]]
 name = "rustc-demangle"
@@ -4301,6 +4325,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d554b7f530dee5964d9a9468d95c1f8b8acae4f282807e7d27d4b03099a46744"
 
 [[package]]
+name = "wasm-streams"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bbae3363c08332cadccd13b67db371814cd214c2524020932f0804b8cf7c078"
+dependencies = [
+ "futures-util",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4497,6 +4534,32 @@ dependencies = [
  "once_cell",
  "prettyplease",
  "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "yew-router"
+version = "0.16.0"
+source = "git+https://github.com/yewstack/yew/#0fa83e7dd1c21f892c9c01aaa6dacb073c12a236"
+dependencies = [
+ "gloo",
+ "js-sys",
+ "route-recognizer",
+ "serde",
+ "serde_urlencoded",
+ "wasm-bindgen",
+ "web-sys",
+ "yew",
+ "yew-router-macro",
+]
+
+[[package]]
+name = "yew-router-macro"
+version = "0.16.0"
+source = "git+https://github.com/yewstack/yew/#0fa83e7dd1c21f892c9c01aaa6dacb073c12a236"
+dependencies = [
  "proc-macro2",
  "quote",
  "syn",
