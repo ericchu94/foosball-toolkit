@@ -18,7 +18,7 @@ pub fn Nav() -> Html {
                     <a class="nav-link disabled">{"Players"}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">{"Import"}</a>
+                    <a class="nav-link disabled">{"Import"}</a>
                 </li>
             </ul>
         </>

@@ -198,10 +198,14 @@ impl Database {
         Ok(player_matches)
     }
 
-    pub async fn get_matches(&self) -> Result<Vec<Match>> {
-        let matches = query_as_unchecked!(Match, "SELECT * FROM match ORDER BY timestamp")
-            .fetch_all(&self.pool)
-            .await?;
+    pub async fn get_matches(&self, limit: i32) -> Result<Vec<Match>> {
+        let matches = query_as_unchecked!(
+            Match,
+            "SELECT * FROM match ORDER BY timestamp LIMIT $1",
+            limit
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(matches)
     }

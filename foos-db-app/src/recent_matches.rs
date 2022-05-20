@@ -1,5 +1,7 @@
-use yew::prelude::*;
 use rand::prelude::*;
+use rxrust::prelude::*;
+use rxrust::scheduler::LocalSpawner;
+use yew::prelude::*;
 
 const NAMES: [&str; 10] = [
     "Eric CHU",
@@ -40,18 +42,44 @@ pub fn RecentMatches() -> Html {
     let mut rng = thread_rng();
     let matches = (0..5).map(|_| {
         let count = rng.gen_range(1..=2);
-        let team1 = (0..count).map(|_| {
-            NAMES[rng.gen_range(0..NAMES.len())]
-        }).collect::<Vec<&str>>();
-        let team2 = (0..count).map(|_| {
-            NAMES[rng.gen_range(0..NAMES.len())]
-        }).collect::<Vec<&str>>();
+        let team1 = (0..count)
+            .map(|_| NAMES[rng.gen_range(0..NAMES.len())])
+            .collect::<Vec<&str>>();
+        let team2 = (0..count)
+            .map(|_| NAMES[rng.gen_range(0..NAMES.len())])
+            .collect::<Vec<&str>>();
         let winner = rng.gen_range(0..=2);
         Match::new(team1, team2, winner)
     });
 
+    let matches_json = use_state(|| String::new());
+
+    {
+        let matches_json = matches_json.clone();
+        use_effect_with_deps(|_| {
+            let scheduler = LocalSpawner {};
+            let mut subscription = observable::from_future_result(
+                reqwest::get("http://localhost:8888/match?limit=5"),
+                scheduler,
+            )
+            .flat_map(|a| observable::from_future_result(a.text(), LocalSpawner {}))
+            .subscribe_all(
+                move |str| {
+                    matches_json.set(str);
+                },
+                |_| {},
+                || {},
+            );
+
+            move || {
+                subscription.unsubscribe();
+            }
+        }, ());
+    }
+
     html! {
         <>
+            {&(*matches_json)}
             <div class="card">
                 <div class="card-header">
                 {"Recent Matches"}

@@ -2,10 +2,15 @@ mod controllers;
 mod database;
 mod models;
 
-use actix_web::{web::Data, App, HttpServer, ResponseError, middleware::Logger};
+use actix_cors::Cors;
+use actix_web::{middleware::Logger, web::Data, App, HttpServer, ResponseError};
 use database::Database;
 
 impl ResponseError for database::DatabaseError {}
+
+fn cors() -> Cors {
+    Cors::default().allow_any_origin()
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -14,6 +19,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
+            .wrap(cors())
             .app_data(Data::new(database.clone()))
             .configure(controllers::config)
     })

@@ -2,17 +2,24 @@ use std::collections::HashMap;
 
 use actix_web::{
     get,
-    web::{self, Data, Json, ServiceConfig},
+    web::{self, Data, Json, Query, ServiceConfig},
     Responder, Result,
 };
 use futures::{stream, StreamExt, TryStreamExt};
+use serde::Deserialize;
 use time::format_description::well_known::Rfc3339;
 
 use crate::{database::Database, models::*};
 
+#[derive(Deserialize)]
+struct MatchQuery {
+    limit: Option<i32>,
+}
+
 #[get("")]
-async fn get_matches(database: Data<Database>) -> Result<impl Responder> {
-    let matches = database.get_matches().await?;
+async fn get_matches(database: Data<Database>, query: Query<MatchQuery>) -> Result<impl Responder> {
+    let limit = query.limit.unwrap_or(100);
+    let matches = database.get_matches(limit).await?;
     Ok(Json(matches))
 }
 
@@ -39,8 +46,9 @@ async fn get_teams(
 }
 
 #[get("/pretty")]
-async fn get_matches_pretty(database: Data<Database>) -> Result<impl Responder> {
-    let matches = database.get_matches().await?;
+async fn get_matches_pretty(database: Data<Database>, query: Query<MatchQuery>) -> Result<impl Responder> {
+    let limit = query.limit.unwrap_or(100);
+    let matches = database.get_matches(limit).await?;
 
     let strings = stream::iter(matches)
         .then(|m| {

@@ -15,7 +15,7 @@ fn App() -> Html {
                 <Header />
                 <RecentMatches />
             </div>
-            <script src="bootstrap.bundle.js"></script>
+            <script src="assets/bootstrap.bundle.js"></script>
         </>
     }
 }
