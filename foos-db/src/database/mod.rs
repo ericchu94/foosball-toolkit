@@ -206,11 +206,12 @@ impl Database {
         Ok(player_matches)
     }
 
-    pub async fn get_matches(&self, limit: i32) -> Result<Vec<Match>> {
+    pub async fn get_matches(&self, limit: i32, offset: i32) -> Result<Vec<Match>> {
         let matches = query_as_unchecked!(
             Match,
-            "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1",
-            limit
+            "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1 OFFSET $2",
+            limit,
+            offset
         )
         .fetch_all(&self.pool)
         .await?;

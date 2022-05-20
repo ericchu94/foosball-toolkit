@@ -5,7 +5,7 @@ use crate::match_component::MatchComponent;
 #[function_component]
 pub fn RecentMatches() -> Html {
 
-    let matches = use_matches();
+    let matches = use_matches(5, 0);
 
     html! {
         <>

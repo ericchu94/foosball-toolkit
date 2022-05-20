@@ -8,12 +8,14 @@ mod models;
 mod nav;
 mod player_name_component;
 mod recent_matches;
+mod matches;
 
 use yew::prelude::*;
 
 use header::Header;
 use import_component::ImportComponent;
 use recent_matches::RecentMatches;
+use matches::Matches;
 
 use yew_router::prelude::*;
 
@@ -21,6 +23,8 @@ use yew_router::prelude::*;
 enum Route {
     #[at("/")]
     Home,
+    #[at("/matches")]
+    Matches,
     #[at("/import")]
     Import,
     #[not_found]
@@ -34,6 +38,7 @@ fn switch(routes: Route) -> Html {
             <Header />
             {match routes {
                 Route::Home => html! { <RecentMatches /> },
+                Route::Matches => html! { <Matches /> },
                 Route::Import => html! {
                     <ImportComponent />
                 },

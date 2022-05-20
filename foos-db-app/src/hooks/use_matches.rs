@@ -7,12 +7,11 @@ use crate::models::*;
 
 use super::BASE_URL;
 
-type N = impl FnMut(Vec<Match>);
-type O = impl Observable<Item = Vec<Match>> + SubscribeNext<'static, N>;
+type O<N: FnMut(Vec<Match>) + 'static> = impl Observable<Item = Vec<Match>> + SubscribeNext<'static, N>;
 
-fn get_observable() -> O {
+pub fn get_matches_observable<N: FnMut(Vec<Match>) + 'static>(limit: i32, offset: i32) -> O<N> {
     observable::from_future(
-        reqwest::get(format!("{BASE_URL}/match?limit=5")),
+        reqwest::get(format!("{BASE_URL}/match?limit={limit}&offset={offset}")),
         LocalSpawner {},
     )
     .flat_map(observable::from_iter)
@@ -21,14 +20,14 @@ fn get_observable() -> O {
 }
 
 #[hook]
-pub fn use_matches() -> Vec<Match> {
+pub fn use_matches(limit: i32, offset: i32) -> Vec<Match> {
     let item = use_state(Vec::default);
 
     {
         let item = item.clone();
         use_effect_with_deps(
             move |_| {
-                let mut s = get_observable().subscribe(move |i| item.set(i));
+                let mut s = get_matches_observable(limit, offset).subscribe(move |i| item.set(i));
 
                 move || {
                     s.unsubscribe();

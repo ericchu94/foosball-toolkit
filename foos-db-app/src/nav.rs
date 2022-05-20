@@ -16,7 +16,7 @@ pub fn Nav() -> Html {
                     <a class="nav-link disabled">{"Tournaments"}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link disabled">{"Matches"}</a>
+                    <Link<Route> to={Route::Matches} classes={classes!("nav-link")}>{"Matches"}</Link<Route>>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link disabled">{"Players"}</a>

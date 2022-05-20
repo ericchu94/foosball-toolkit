@@ -14,12 +14,14 @@ use crate::{database::Database, models::*};
 #[derive(Deserialize)]
 struct MatchQuery {
     limit: Option<i32>,
+    offset: Option<i32>,
 }
 
 #[get("")]
 async fn get_matches(database: Data<Database>, query: Query<MatchQuery>) -> Result<impl Responder> {
     let limit = query.limit.unwrap_or(100);
-    let matches = database.get_matches(limit).await?;
+    let offset = query.offset.unwrap_or(0);
+    let matches = database.get_matches(limit, offset).await?;
     Ok(Json(matches))
 }
 
@@ -48,7 +50,8 @@ async fn get_teams(
 #[get("/pretty")]
 async fn get_matches_pretty(database: Data<Database>, query: Query<MatchQuery>) -> Result<impl Responder> {
     let limit = query.limit.unwrap_or(100);
-    let matches = database.get_matches(limit).await?;
+    let offset = query.limit.unwrap_or(0);
+    let matches = database.get_matches(limit, offset).await?;
 
     let strings = stream::iter(matches)
         .then(|m| {
