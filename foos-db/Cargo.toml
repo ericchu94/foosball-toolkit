@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.0.1"
-sqlx = { git = "https://github.com/launchbadge/sqlx", features = ["runtime-actix-rustls", "macros", "postgres", "time"] }
+sqlx = { git = "https://github.com/launchbadge/sqlx", features = ["runtime-actix-rustls", "macros", "postgres", "time", "offline"] }
 thiserror = "1.0.31"
 serde = { version = "1.0.137", features = ["derive"] }
 actix-multipart = "0.4.0"

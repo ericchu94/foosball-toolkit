@@ -17,8 +17,8 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new() -> Result<Self> {
-        let pool = PgPool::connect("postgresql://postgres@localhost").await?;
+    pub async fn new(uri: &str) -> Result<Self> {
+        let pool = PgPool::connect(uri).await?;
 
         Ok(Self { pool })
     }

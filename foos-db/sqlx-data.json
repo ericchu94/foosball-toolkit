@@ -1,0 +1,517 @@
+{
+  "db": "PostgreSQL",
+  "115e5d1384c370f2ba19d0967667a54e904e31c18f03de19b70ac388aa4d36f5": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO fast_player (license, first_name, last_name) VALUES ($1, $2, $3)"
+  },
+  "25206cca3430f7978c6f6ded03de8c223a0664e0fe18671dafabde356901d295": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "license",
+          "ordinal": 3,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM fast_player WHERE license = $1"
+  },
+  "25bc5c8b35d5f78cc3cd860530164c0bb825d478f9c96ffe2a20d6747a6bdb0f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO tournament (name, source) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+  },
+  "366e289bb8296a771bd937cd1441900abb8b0b62e090586d31e5f8d18bd713ed": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+  },
+  "3877c6145ec6719c1581974eb816718b5eff3e2c3877f8631229be6807c36ee6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team",
+          "ordinal": 2,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "team1",
+                  "team2"
+                ]
+              },
+              "name": "team"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM player_match WHERE match_id = $1"
+  },
+  "3ab350c138cfb67cb6340282e0a1f8308c93d622e253479d73bebc45d1efad4b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "source",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM tournament WHERE id = $1"
+  },
+  "54cb57012a9d2bac0bda59ec578d96da17ad2358ea83e445a93ccbe15bd2dd53": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2)"
+  },
+  "6adfed5dd9c1ba7362c819bc3ff0b5e95d2296c32d8ab59b97596276147a1a3b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM player WHERE id = $1"
+  },
+  "8bda24c1160f9129f4a4c22303b5012180b2b8ebb23bc596007d8531469673b7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "source",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM tournament"
+  },
+  "8c750e4e8191c556694a28f3661fdab1e54ab0380e3b93c52584ecafaf1a2e67": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "source",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2"
+  },
+  "aa430a095ec492463ea301019e1f1ec0692bc5d80cdd81141f998795c0af1721": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tournament_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM match ORDER BY timestamp DESC LIMIT $1"
+  },
+  "c00fecc2df44adfc0140910df926a62eb5cc19868d146b66fcc7841d92f2847f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO tournament (name, source) VALUES ($1, $2)"
+  },
+  "c4526af506f96bb1c10cda5587a5a954121fb085ea8a31d3f90a1dc173786598": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tournament_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Timestamptz",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        ]
+      }
+    },
+    "query": "INSERT INTO match (tournament_id, timestamp, winner) VALUES ($1, $2, $3) RETURNING *"
+  },
+  "e71b23897613f5813979e93c8115640b2324e493edcfd6e7600cca3856a39e0c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team",
+          "ordinal": 2,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "team1",
+                  "team2"
+                ]
+              },
+              "name": "team"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM player_match"
+  },
+  "e83f080cadc59f0b2dd832fb086b73f31f95009cfae367653790ed5fa7604ded": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "team1",
+                  "team2"
+                ]
+              },
+              "name": "team"
+            }
+          }
+        ]
+      }
+    },
+    "query": "INSERT INTO player_match (player_id, match_id, team) VALUES ($1, $2, $3)"
+  },
+  "f74a3006cda80cc0c88aac8c7652d71e7050815e47d6c0826be4756251e44460": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM player"
+  },
+  "f9ea8063ed4c857a89cfb2f217ff9990d074fc5afe3f18226f6c7398cf802c16": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT * FROM player WHERE first_name = $1 AND last_name = $2"
+  }
+}

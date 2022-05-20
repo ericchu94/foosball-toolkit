@@ -12,9 +12,23 @@ fn cors() -> Cors {
     Cors::default().allow_any_origin()
 }
 
+fn get_connection_string() -> String {
+    std::env::var("POSTGRES_CONNECTION_STRING")
+        .unwrap_or_else(|_| "postgresql://postgres@localhost".to_owned())
+}
+
+fn get_port() -> u16 {
+    if let Ok(s) = std::env::var("PORT") {
+        if let Ok(p) = s.parse() {
+            return p;
+        }
+    }
+    8888
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let database = Database::new().await.unwrap();
+    let database = Database::new(&get_connection_string()).await.unwrap();
 
     HttpServer::new(move || {
         App::new()
@@ -23,7 +37,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(Data::new(database.clone()))
             .configure(controllers::config)
     })
-    .bind(("0.0.0.0", 8888))?
+    .bind(("0.0.0.0", get_port()))?
     .run()
     .await
 }

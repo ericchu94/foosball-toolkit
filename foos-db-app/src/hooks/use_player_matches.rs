@@ -5,13 +5,15 @@ use rxrust::scheduler::LocalSpawner;
 
 use crate::models::*;
 
+use super::BASE_URL;
+
 type N = impl FnMut(Vec<PlayerMatch>);
 type O = impl Observable<Item = Vec<PlayerMatch>> + SubscribeNext<'static, N>;
 
 fn get_observable(match_id: i32) -> O {
     observable::from_future(
         reqwest::get(format!(
-            "http://192.168.2.12:8888/player_match?match_id={match_id}"
+            "{BASE_URL}/player_match?match_id={match_id}"
         )),
         LocalSpawner {},
     )
