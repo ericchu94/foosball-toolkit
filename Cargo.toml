@@ -7,4 +7,5 @@ members = [
     "ktool",
     "fast",
     "foos-db",
+    "foos-db-app",
 ]
