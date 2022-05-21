@@ -1,10 +1,12 @@
 mod controllers;
 mod database;
 mod models;
+mod rating;
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web::Data, App, HttpServer, ResponseError};
 use database::Database;
+use rating::RatingService;
 
 impl ResponseError for database::DatabaseError {}
 
@@ -35,6 +37,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(cors())
             .app_data(Data::new(database.clone()))
+            .app_data(Data::new(RatingService::new(database.clone())))
             .configure(controllers::config)
     })
     .bind(("0.0.0.0", get_port()))?

@@ -1,5 +1,6 @@
 use sqlx::{query, query_as, query_as_unchecked, PgPool};
 use thiserror::Error;
+use time::OffsetDateTime;
 
 use crate::models::*;
 
@@ -217,5 +218,67 @@ impl Database {
             .await?;
 
         Ok(player)
+    }
+
+    pub async fn delete_ratings_after_timestamp(&self, timestamp: OffsetDateTime) -> Result<()> {
+        query!("DELETE FROM rating WHERE match_id IN (SELECT match_id FROM match WHERE timestamp >= $1)", timestamp)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_all_ratings(&self) -> Result<()> {
+        query!("DELETE FROM rating").execute(&self.pool).await?;
+
+        Ok(())
+    }
+
+    pub async fn get_first_match_without_rating(&self) -> Result<Match> {
+        Ok(query_as_unchecked!(Match, "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC LIMIT 1")
+        .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_latest_rating_of_player(&self, player_id: i32) -> Result<Rating> {
+        Ok(query_as!(Rating, "SELECT rating.* FROM rating JOIN match ON match_id = id WHERE player_id = $1 ORDER BY timestamp DESC LIMIT 1", player_id)
+        .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_rating_by_player_id_and_match_id(
+        &self,
+        player_id: i32,
+        match_id: i32,
+    ) -> Result<Rating> {
+        Ok(query_as!(
+            Rating,
+            "SELECT * FROM rating WHERE player_id = $1 AND match_id = $2",
+            player_id,
+            match_id
+        )
+        .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_matches_without_ratings(&self) -> Result<Vec<Match>> {
+        let matches = query_as_unchecked!(
+            Match,
+            "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(matches)
+    }
+
+    pub async fn create_rating(&self, rating: Rating) -> Result<()> {
+        query!("INSERT INTO rating (player_id, match_id, before_rating, after_rating) VALUES ($1, $2, $3, $4)",
+            rating.player_id,
+            rating.match_id,
+            rating.before_rating,
+            rating.after_rating).execute(&self.pool).await?;
+
+        Ok(())
     }
 }

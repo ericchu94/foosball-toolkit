@@ -15,6 +15,7 @@ use zip::result::ZipError;
 use crate::{
     controllers::import::ktool::{import_kt, parse},
     database::{Database, DatabaseError},
+    rating::{RatingService, RatingServiceError},
 };
 
 use thiserror::Error;
@@ -36,6 +37,8 @@ pub enum ImportError {
 }
 
 impl ResponseError for ImportError {}
+
+impl ResponseError for RatingServiceError {}
 
 async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
     let map = payload
@@ -85,7 +88,10 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
     Ok(HttpResponse::Ok())
 }
 
-async fn import_fast_init_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
+async fn import_fast_init_impl(
+    payload: Multipart,
+    database: Data<Database>,
+) -> Result<impl Responder> {
     let map = payload
         .map(Result::unwrap)
         .then(|field| async {
@@ -110,13 +116,29 @@ async fn import_fast_init_impl(payload: Multipart, database: Data<Database>) -> 
 }
 
 #[post("/ktool")]
-async fn import_ktool(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    import_ktool_impl(payload, database).await
+async fn import_ktool(
+    payload: Multipart,
+    database: Data<Database>,
+    rating_service: Data<RatingService>,
+) -> Result<impl Responder> {
+    let response = import_ktool_impl(payload, database).await;
+
+    rating_service.compute_all().await?;
+
+    response
 }
 
 #[post("/fast")]
-async fn import_fast(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    import_fast_impl(payload, database).await
+async fn import_fast(
+    payload: Multipart,
+    database: Data<Database>,
+    rating_service: Data<RatingService>,
+) -> Result<impl Responder> {
+    let response = import_fast_impl(payload, database).await;
+
+    rating_service.compute_all().await?;
+
+    response
 }
 
 #[post("/fast-init")]

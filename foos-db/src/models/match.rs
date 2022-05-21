@@ -10,7 +10,7 @@ pub struct Match {
     pub winner: Winner,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, sqlx::Type, Debug, Clone, Copy, PartialEq, Eq)]
 #[sqlx(type_name = "winner", rename_all = "lowercase")]
 pub enum Winner {
     None,

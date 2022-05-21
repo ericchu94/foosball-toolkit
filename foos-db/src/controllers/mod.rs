@@ -1,10 +1,11 @@
 use actix_web::web;
 
-mod player;
-mod tournament;
 mod import;
 mod r#match;
+mod player;
 mod player_match;
+mod rating;
+mod tournament;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     player::config(cfg);
@@ -12,4 +13,5 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     import::config(cfg);
     r#match::config(cfg);
     player_match::config(cfg);
+    rating::config(cfg);
 }

@@ -1,7 +1,6 @@
 
 use std::collections::HashMap;
 
-use rand::Rng;
 use time::macros::format_description;
 use yew::prelude::*;
 
@@ -31,12 +30,6 @@ pub fn MatchComponent(props: &MatchProps) -> Html {
         Winner::Team2 => (class_lose, class_win),
         _ => unreachable!(),
     };
-    let (sign1, sign2) = match m.winner {
-        Winner::Draw |
-        Winner::Team1 => ('+', '-'),
-        Winner::Team2 => ('-', '+'),
-        _ => unreachable!(),
-    };
 
     let mut map = HashMap::new();
     map.insert(Team::Team1, vec![]);
@@ -47,8 +40,6 @@ pub fn MatchComponent(props: &MatchProps) -> Html {
     });
 
     let format = format_description!("[year]-[month]-[day] [hour]:[minute]");
-
-    let mut rng = rand::thread_rng();
 
     html! {
         <>
@@ -65,8 +56,7 @@ pub fn MatchComponent(props: &MatchProps) -> Html {
                     <div class="col-sm text-sm-end text-center align-self-top">
                         <i class={classes!(classes1)}></i>
                         {map[&Team::Team1].iter().map(|id| html! { <>
-                            <PlayerNameComponent {id} />
-                            <small class="text-muted">{format!("{} {} {}", rng.gen_range(1800..=2600), sign1, rng.gen_range(10..=20))}</small>
+                            <PlayerNameComponent {id} match_id={m.id} />
                         </> }).collect::<Html>()}
                     </div>
                     <div class="col-sm-1 text-center align-self-center">
@@ -75,8 +65,7 @@ pub fn MatchComponent(props: &MatchProps) -> Html {
                     <div class="col-sm text-sm-start text-center align-self-top">
                         <i class={classes!(classes2)}></i>
                         {map[&Team::Team2].iter().map(|id| html! { <>
-                            <PlayerNameComponent {id} />
-                            <small class="text-muted">{format!("{} {} {}", rng.gen_range(1800..=2600), sign2, rng.gen_range(10..=20))}</small>
+                            <PlayerNameComponent {id} match_id={m.id} />
                         </> }).collect::<Html>()}
                     </div>
                 </div>
