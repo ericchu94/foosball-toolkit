@@ -6,6 +6,7 @@ mod player;
 mod player_match;
 mod rating;
 mod tournament;
+mod match_data;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     player::config(cfg);
@@ -14,4 +15,5 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     r#match::config(cfg);
     player_match::config(cfg);
     rating::config(cfg);
+    match_data::config(cfg);
 }
