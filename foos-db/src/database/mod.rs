@@ -186,14 +186,6 @@ impl Database {
         .await?)
     }
 
-    pub async fn get_player_matches(&self) -> Result<Vec<PlayerMatch>> {
-        let player_matches = query_as_unchecked!(PlayerMatch, "SELECT * FROM player_match")
-            .fetch_all(&self.pool)
-            .await?;
-
-        Ok(player_matches)
-    }
-
     pub async fn get_player_matches_by_match_id(&self, match_id: i32) -> Result<Vec<PlayerMatch>> {
         let player_matches = query_as_unchecked!(
             PlayerMatch,

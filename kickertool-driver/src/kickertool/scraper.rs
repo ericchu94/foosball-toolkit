@@ -1,35 +1,6 @@
 use kickertool_data::*;
 use scraper::{ElementRef, Html, Selector};
 
-pub fn kickertool_data_from_playlist<S: AsRef<str>>(html: S) -> Option<KickertoolData> {
-    let html = html.as_ref();
-
-    let html = Html::parse_document(html);
-
-    let standings = {
-        let selector = Selector::parse(".tournament-right .table-row").unwrap();
-        html.select(&selector).map(|row| standing(&row)).collect()
-    };
-
-    let tables = {
-        let selector = Selector::parse(".playlist-row.active").unwrap();
-        html.select(&selector)
-            .map(|table| table_from_playlist_element(&table))
-            .collect()
-    };
-
-    let next_matches = vec![];
-
-    let tournament_name = String::new();
-
-    Some(KickertoolData {
-        tournament_name,
-        standings,
-        tables,
-        next_matches,
-    })
-}
-
 pub fn kickertool_data_from_qualification_display<S: AsRef<str>>(
     html: S,
 ) -> Option<KickertoolData> {
@@ -64,15 +35,6 @@ pub fn kickertool_data_from_qualification_display<S: AsRef<str>>(
         tables,
         next_matches,
     })
-}
-
-fn table_from_playlist_element(element: &ElementRef) -> Table {
-    let number = select_inner_text(element, "kt-table-name span")
-        .parse()
-        .unwrap();
-    let r#match = match_from_element(element);
-
-    Table { number, r#match }
 }
 
 fn table_from_qualificaition_display_element(element: &ElementRef) -> Table {

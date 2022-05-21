@@ -1,6 +1,5 @@
-use futures::{stream, StreamExt, TryStreamExt};
+use futures::{stream, StreamExt};
 use js_sys::Uint8Array;
-use reqwest::Body;
 use rxrust::prelude::*;
 use rxrust::scheduler::LocalSpawner;
 use wasm_bindgen::JsCast;
@@ -46,7 +45,6 @@ pub fn ImportComponent() -> Html {
 
     let onsubmit = {
         let status = status.clone();
-        let files = files.clone();
         Callback::from(move |e: FocusEvent| {
             e.prevent_default();
 
@@ -112,25 +110,6 @@ pub fn ImportComponent() -> Html {
                 .subscribe(move |(file_name, code)| {
                     status2.set(format!("Uploaded {file_name}, status: {code}"));
                 });
-
-            // observable::from_iter(files)
-            //     .flat_map(move |f| {
-            //         status.set(format!("Uploading {}", f.name()));
-            //         let readable_stream = ReadableStream::from_raw(f.stream().unchecked_into::<wasm_streams::readable::sys::ReadableStream>());
-            //         let stream = readable_stream.into_stream();
-            //         stream.and_then(|a| a.js_typeof)
-            //         let part = reqwest::multipart::Part::stream(body);
-            //         let form = reqwest::multipart::Form::new().part("file", part);
-            //         observable::from_future(
-            //             client.post(get_url_for_import(f.name())).multipart(form).send(),
-            //             LocalSpawner {},
-            //         )
-            //     })
-            //     .map(Result::unwrap)
-            //     .map(|response| response.status())
-            //     .subscribe(move |code| {
-            //         status2.set(format!("Uploaded completed. {:?}", code));
-            //     });
         })
     };
 

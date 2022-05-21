@@ -24,7 +24,7 @@ fn get_observable(match_id: i32) -> O {
 
 #[hook]
 pub fn use_player_matches(id: i32) -> Vec<PlayerMatch> {
-    let item = use_state(|| vec![]);
+    let item = use_state(Vec::new);
 
     {
         let item = item.clone();

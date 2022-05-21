@@ -25,28 +25,6 @@ async fn get_matches(database: Data<Database>, query: Query<MatchQuery>) -> Resu
     Ok(Json(matches))
 }
 
-async fn get_teams(
-    database: Data<Database>,
-    m: Match,
-) -> crate::database::Result<(Match, HashMap<Team, Vec<Player>>)> {
-    let player_matches = database.get_player_matches_by_match_id(m.id).await?;
-    let teams = stream::iter(player_matches)
-        .then(|pm| {
-            let database = database.clone();
-            async move {
-                let player = database.get_player_by_id(pm.player_id).await?;
-                crate::database::Result::Ok((pm.team, player))
-            }
-        })
-        .try_fold(HashMap::new(), |mut acc, (team, player)| async {
-            acc.entry(team).or_insert(vec![]).push(player);
-            Ok(acc)
-        })
-        .await?;
-
-    crate::database::Result::Ok((m, teams))
-}
-
 #[get("/pretty")]
 async fn get_matches_pretty(database: Data<Database>, query: Query<MatchQuery>) -> Result<impl Responder> {
     let limit = query.limit.unwrap_or(100);

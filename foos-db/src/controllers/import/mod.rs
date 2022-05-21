@@ -76,7 +76,7 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
         .collect::<HashMap<String, Vec<u8>>>()
         .await;
 
-    let mut file = &map["file"];
+    let file = &map["file"];
 
     let fast = fast::parse(&mut file.as_slice())?;
 
@@ -100,7 +100,7 @@ async fn import_fast_init_impl(payload: Multipart, database: Data<Database>) -> 
         .collect::<HashMap<String, Vec<u8>>>()
         .await;
 
-    let mut file = &map["file"];
+    let file = &map["file"];
 
     let fast = fast::parse(&mut file.as_slice())?;
 

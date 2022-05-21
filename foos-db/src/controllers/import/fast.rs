@@ -1,4 +1,7 @@
-use std::io::{BufReader, Cursor, Read, Seek};
+use std::{
+    cmp::Ordering,
+    io::{BufReader, Cursor, Read, Seek},
+};
 
 use actix_web::web::Data;
 use fast::TeamMatch;
@@ -99,21 +102,18 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
     };
 
     let get_winner = |tm: &TeamMatch| {
-        let (a, b) = tm.game.iter().fold((0, 0), |acc, g| {
-            if g.score_team1 > g.score_team2 {
-                (acc.0 + 2, acc.1)
-            } else if g.score_team1 < g.score_team2 {
-                (acc.0, acc.1 + 2)
-            } else {
-                (acc.0 + 1, acc.1 + 1)
-            }
-        });
-        if a > b {
-            Winner::Team1
-        } else if b > a {
-            Winner::Team2
-        } else {
-            Winner::Draw
+        let (a, b) =
+            tm.game
+                .iter()
+                .fold((0, 0), |acc, g| match g.score_team1.cmp(&g.score_team2) {
+                    Ordering::Greater => (acc.0 + 2, acc.1),
+                    Ordering::Less => (acc.0, acc.1 + 2),
+                    Ordering::Equal => (acc.0 + 1, acc.1 + 1),
+                });
+        match a.cmp(&b) {
+            Ordering::Greater => Winner::Team1,
+            Ordering::Less => Winner::Team2,
+            Ordering::Equal => Winner::Draw,
         }
     };
 
@@ -160,43 +160,6 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
     }
 
     Ok(())
-}
-
-fn get_winner(play: &ktool::Play) -> Winner {
-    match play.winner {
-        Some(idx) => {
-            if idx == 1 {
-                Winner::Team1
-            } else if idx == 2 {
-                Winner::Team2
-            } else {
-                panic!()
-            }
-        }
-        None => {
-            let (r1, r2) = play
-                .disciplines
-                .iter()
-                .map(|discipline| {
-                    discipline
-                        .sets
-                        .iter()
-                        .map(|result| (result.team1, result.team2))
-                        .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1))
-                })
-                .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1));
-
-            if r1 > r2 {
-                Winner::Team1
-            } else if r2 > r1 {
-                Winner::Team2
-            } else if r1 == 0 && r2 == 0 {
-                Winner::None
-            } else {
-                Winner::Draw
-            }
-        }
-    }
 }
 
 pub fn parse<'a>(buffer: &'a mut &'a [u8]) -> ImportResult<fast::Fast> {
