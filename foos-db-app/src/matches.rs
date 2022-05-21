@@ -44,8 +44,9 @@ pub fn Matches() -> Html {
                 </div>
                 <div class="list-group list-group-flush">
                     {matches.iter().cloned().map(|r#match| {
+                        let key = r#match.id;
                         html!{
-                            <MatchComponent {r#match} />
+                            <MatchComponent {key} {r#match} />
                         }
                     }).collect::<Html>()}
                     <button type="button" class="text-center list-group-item list-group-item-action" aria-current="true" {onclick}>{"More ..."}</button>
