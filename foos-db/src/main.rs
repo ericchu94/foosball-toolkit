@@ -30,6 +30,8 @@ fn get_port() -> u16 {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+
     let database = Database::new(&get_connection_string()).await.unwrap();
 
     HttpServer::new(move || {

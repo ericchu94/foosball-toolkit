@@ -28,7 +28,7 @@ impl RatingCalculator for EloRatingCalculator {
         };
 
         let (a, b) = self.elo_rank.calculate(a as f64, b as f64);
-        let (a, b) = (a as i32, b as i32);
+        let (a, b) = (a.round() as i32, b.round() as i32);
         
         if outcome == Winner::Team2 {
             (b, a)

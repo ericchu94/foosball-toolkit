@@ -104,7 +104,7 @@ impl RatingService {
         let before1 =
             team1_ratings.iter().map(|pair| pair.1).sum::<i32>() / team1_ratings.len() as i32;
         let before2 =
-            team1_ratings.iter().map(|pair| pair.1).sum::<i32>() / team2_ratings.len() as i32;
+            team2_ratings.iter().map(|pair| pair.1).sum::<i32>() / team2_ratings.len() as i32;
 
         let (after1, after2) = self.calculator.calculate(before1, before2, m.winner);
 
