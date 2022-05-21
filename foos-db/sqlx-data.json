@@ -14,6 +14,93 @@
     },
     "query": "INSERT INTO fast_player (license, first_name, last_name) VALUES ($1, $2, $3)"
   },
+  "17afea837104c259b4269f80d137f17ac9bc8cb281cd08652bc89c3a4c8c2662": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "before_rating",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "after_rating",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM rating WHERE player_id = $1 AND match_id = $2"
+  },
+  "216a9f55c77411f890695d6248f3d95098aee5c64e282af0f4619b5e41dd9fb1": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tournament_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC LIMIT 1"
+  },
   "25206cca3430f7978c6f6ded03de8c223a0664e0fe18671dafabde356901d295": {
     "describe": {
       "columns": [
@@ -165,6 +252,21 @@
     },
     "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2)"
   },
+  "587a94a5207f544cafddb54d50ac9f28bbc2afd142285a872c426643b4b78e21": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO rating (player_id, match_id, before_rating, after_rating) VALUES ($1, $2, $3, $4)"
+  },
   "690415a543e09ec2086f933c17c567ea37d705bc0fc9867cfc48e5fe5c16c261": {
     "describe": {
       "columns": [
@@ -248,6 +350,44 @@
     },
     "query": "SELECT * FROM player WHERE id = $1"
   },
+  "7852283d86ed06ed6457b7521625d6322def8b68d2698058d6ac67cb55f89540": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "before_rating",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "after_rating",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT rating.* FROM rating JOIN match ON match_id = id WHERE player_id = $1 ORDER BY timestamp DESC LIMIT 1"
+  },
   "8bda24c1160f9129f4a4c22303b5012180b2b8ebb23bc596007d8531469673b7": {
     "describe": {
       "columns": [
@@ -310,6 +450,64 @@
       }
     },
     "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2"
+  },
+  "9d684b40ff8ac3daf5058cc83ea5b559ef91d83061774c98d10db003c6fd218d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "tournament_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC"
+  },
+  "b7266cf0b1f18caa7b7a349d5aa4f3618aa1c7bf58b5ec89156dbbe6fd81cc03": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "DELETE FROM rating"
   },
   "c00fecc2df44adfc0140910df926a62eb5cc19868d146b66fcc7841d92f2847f": {
     "describe": {
@@ -387,46 +585,6 @@
       }
     },
     "query": "INSERT INTO match (tournament_id, timestamp, winner) VALUES ($1, $2, $3) RETURNING *"
-  },
-  "e71b23897613f5813979e93c8115640b2324e493edcfd6e7600cca3856a39e0c": {
-    "describe": {
-      "columns": [
-        {
-          "name": "player_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "match_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "team",
-          "ordinal": 2,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "team1",
-                  "team2"
-                ]
-              },
-              "name": "team"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "SELECT * FROM player_match"
   },
   "e83f080cadc59f0b2dd832fb086b73f31f95009cfae367653790ed5fa7604ded": {
     "describe": {
@@ -514,5 +672,17 @@
       }
     },
     "query": "SELECT * FROM player WHERE first_name = $1 AND last_name = $2"
+  },
+  "fe8c652643257bc59385f79defb13456d0f083f9ed257f8f4496a76769a11965": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "DELETE FROM rating WHERE match_id IN (SELECT match_id FROM match WHERE timestamp >= $1)"
   }
 }
