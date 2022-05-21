@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use futures::{stream, StreamExt};
 use thiserror::Error;
 use time::OffsetDateTime;
 
@@ -56,18 +55,25 @@ impl RatingService {
         self.delete_ratings_after_timestamp(timestamp).await
     }
 
-    /// This retrieves the current player rating.
-    /// Ratings need to be consistent first!
-    async fn get_player_rating(&self, player_id: i32) -> i32 {
-        self.database
-            .get_latest_rating_of_player(player_id)
-            .await
-            .map(|r| r.after_rating)
-            .unwrap_or(1500)
-    }
-
     async fn get_matches_without_ratings(&self) -> Result<Vec<Match>> {
         Ok(self.database.get_matches_without_ratings().await?)
+    }
+
+    /// This retrieves the current player ratings.
+    /// Ratings need to be consistent first!
+    async fn get_latest_rating_for_players(&self, player_ids: &[i32]) -> Result<Vec<(i32, i32)>> {
+        let ratings = self
+            .database
+            .get_latest_rating_for_players(player_ids)
+            .await?
+            .into_iter()
+            .map(|r| (r.player_id, r.after_rating))
+            .collect::<HashMap<i32, i32>>();
+
+        Ok(player_ids
+            .iter()
+            .map(|id| (*id, *ratings.get(id).unwrap_or(&1500)))
+            .collect())
     }
 
     async fn get_player_ratings_for_match(
@@ -86,14 +92,12 @@ impl RatingService {
                 acc
             });
 
-        let team1_ratings = stream::iter(map[&Team::Team1].iter())
-            .then(|&player_id| async move { (player_id, self.get_player_rating(player_id).await) })
-            .collect::<Vec<(i32, i32)>>()
-            .await;
-        let team2_ratings = stream::iter(map[&Team::Team2].iter())
-            .then(|&player_id| async move { (player_id, self.get_player_rating(player_id).await) })
-            .collect::<Vec<(i32, i32)>>()
-            .await;
+        let team1_ratings = self
+            .get_latest_rating_for_players(&map[&Team::Team1])
+            .await?;
+        let team2_ratings = self
+            .get_latest_rating_for_players(&map[&Team::Team2])
+            .await?;
 
         Ok((team1_ratings, team2_ratings))
     }
@@ -111,21 +115,24 @@ impl RatingService {
         let delta1 = after1 - before1;
         let delta2 = after2 - before2;
 
-        for p1 in team1_ratings {
-            let rating = Self::create_rating(p1.0, p1.1, delta1, m.id);
-            self.database.create_rating(rating).await?;
-        }
+        let ratings = team1_ratings
+            .into_iter()
+            .map(|p| Self::create_rating(p.0, p.1, delta1, m.id))
+            .chain(
+                team2_ratings
+                    .into_iter()
+                    .map(|p| Self::create_rating(p.0, p.1, delta2, m.id)),
+            )
+            .collect::<Vec<Rating>>();
 
-        for p1 in team2_ratings {
-            let rating = Self::create_rating(p1.0, p1.1, delta2, m.id);
-            self.database.create_rating(rating).await?;
-        }
+        self.database.create_ratings(ratings).await?;
 
         Ok(())
     }
 
     fn create_rating(player_id: i32, before_rating: i32, delta: i32, match_id: i32) -> Rating {
         Rating {
+            id: 0,
             player_id,
             match_id,
             before_rating,

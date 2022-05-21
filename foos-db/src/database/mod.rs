@@ -241,8 +241,23 @@ impl Database {
     }
 
     pub async fn get_latest_rating_of_player(&self, player_id: i32) -> Result<Rating> {
-        Ok(query_as!(Rating, "SELECT rating.* FROM rating JOIN match ON match_id = id WHERE player_id = $1 ORDER BY timestamp DESC LIMIT 1", player_id)
+        Ok(query_as!(Rating, "SELECT rating.* FROM rating JOIN match ON match_id = match.id WHERE player_id = $1 ORDER BY timestamp DESC LIMIT 1", player_id)
         .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_latest_rating_for_players(&self, player_ids: &[i32]) -> Result<Vec<Rating>> {
+        Ok(query_as_unchecked!(
+            Rating,
+            "SELECT r.* FROM rating r
+        JOIN (
+            SELECT MAX(id) id, player_id FROM rating r
+            WHERE player_id = ANY($1)
+            GROUP BY player_id
+        ) sub ON r.id = sub.id AND r.player_id = sub.player_id",
+            player_ids
+        )
+        .fetch_all(&self.pool)
         .await?)
     }
 
@@ -272,12 +287,19 @@ impl Database {
         Ok(matches)
     }
 
-    pub async fn create_rating(&self, rating: Rating) -> Result<()> {
-        query!("INSERT INTO rating (player_id, match_id, before_rating, after_rating) VALUES ($1, $2, $3, $4)",
-            rating.player_id,
-            rating.match_id,
-            rating.before_rating,
-            rating.after_rating).execute(&self.pool).await?;
+    pub async fn create_ratings(&self, ratings: Vec<Rating>) -> Result<()> {
+        let player_ids = ratings.iter().map(|r| r.player_id).collect::<Vec<i32>>();
+        let match_ids = ratings.iter().map(|r| r.match_id).collect::<Vec<i32>>();
+        let before_ratings = ratings
+            .iter()
+            .map(|r| r.before_rating)
+            .collect::<Vec<i32>>();
+        let after_rating = ratings.iter().map(|r| r.after_rating).collect::<Vec<i32>>();
+        query!("INSERT INTO rating (player_id, match_id, before_rating, after_rating) SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[], $4::int[])",
+            player_ids.as_slice(),
+            match_ids.as_slice(),
+            before_ratings.as_slice(),
+            after_rating.as_slice()).execute(&self.pool).await?;
 
         Ok(())
     }
