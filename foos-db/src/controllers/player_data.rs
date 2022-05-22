@@ -10,6 +10,7 @@ use crate::database::Database;
 #[derive(Deserialize)]
 struct PlayerDataQuery {
     limit: i32,
+    offset: i32,
 }
 
 #[get("")]
@@ -18,7 +19,8 @@ async fn get_player_datas(
     query: Query<PlayerDataQuery>,
 ) -> Result<impl Responder> {
     let limit = query.limit;
-    let player_datas = database.get_player_datas(limit).await?;
+    let offset = query.offset;
+    let player_datas = database.get_player_datas(limit, offset).await?;
     Ok(Json(player_datas))
 }
 

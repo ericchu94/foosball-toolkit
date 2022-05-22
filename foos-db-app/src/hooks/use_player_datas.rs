@@ -7,13 +7,12 @@ use crate::models::*;
 
 use super::BASE_URL;
 
-type N = impl FnMut(Vec<PlayerData>);
-type O = impl Observable<Item = Vec<PlayerData>> + SubscribeNext<'static, N>;
+type O<N: FnMut(Vec<PlayerData>) + 'static> = impl Observable<Item = Vec<PlayerData>> + SubscribeNext<'static, N>;
 
-fn get_observable(limit: i32) -> O {
+pub fn get_player_datas_observable<N: FnMut(Vec<PlayerData>) + 'static>(limit: i32, offset: i32) -> O<N> {
     observable::from_future(
         reqwest::get(format!(
-            "{BASE_URL}/player_data?limit={limit}"
+            "{BASE_URL}/player_data?limit={limit}&offset={offset}"
         )),
         LocalSpawner {},
     )
@@ -23,20 +22,20 @@ fn get_observable(limit: i32) -> O {
 }
 
 #[hook]
-pub fn use_player_datas(limit: i32) -> Vec<PlayerData> {
+pub fn use_player_datas(limit: i32, offset: i32) -> Vec<PlayerData> {
     let item = use_state(Vec::default);
 
     {
         let item = item.clone();
         use_effect_with_deps(
-            move |&limit| {
-                let mut s = get_observable(limit).subscribe(move |i| item.set(i));
+            move |&(limit, offset)| {
+                let mut s = get_player_datas_observable(limit, offset).subscribe(move |i| item.set(i));
 
                 move || {
                     s.unsubscribe();
                 }
             },
-            limit,
+            (limit, offset),
         );
     }
 

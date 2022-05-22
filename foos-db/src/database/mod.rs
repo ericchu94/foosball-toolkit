@@ -371,7 +371,7 @@ impl Database {
         .await?)
     }
 
-    pub async fn get_player_datas(&self, limit: i32) -> Result<Vec<PlayerData>> {
+    pub async fn get_player_datas(&self, limit: i32, offset: i32) -> Result<Vec<PlayerData>> {
         Ok(query_as!(
             PlayerData,
             "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r
@@ -381,8 +381,8 @@ impl Database {
                 GROUP BY r.player_id, p.first_name, p.last_name
             ) s ON s.rating_id = r.id AND s.player_id = r.player_id
             ORDER BY rating DESC
-            LIMIT $1",
-            limit as i64
+            LIMIT $1 OFFSET $2",
+            limit as i64, offset as i64
         )
         .fetch_all(&self.pool)
         .await?)
