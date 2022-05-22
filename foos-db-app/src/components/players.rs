@@ -43,14 +43,15 @@ pub fn Players() -> Html {
                 <div class="card-header">
                 {"Players"}
                 </div>
-                <div class="list-group list-group-flush">
+                <div class="list-group list-group-flush list-group-numbered">
                     {player_datas.iter().cloned().enumerate().map(|(index, player_data)| {
                         let key = player_data.player_id;
                         html!{
                             <PlayerComponent {key} {index} {player_data} />
                         }
                     }).collect::<Html>()}
-                    <button type="button" class="text-center list-group-item list-group-item-action" aria-current="true" {onclick}>{"More ..."}</button>
+                    <style>{r#".more-btn::before { content: none !important }"#}</style>
+                    <button type="button" class="more-btn text-center list-group-item list-group-item-action" aria-current="true" {onclick}>{"More ..."}</button>
                 </div>
             </div>
         </>
