@@ -356,4 +356,35 @@ impl Database {
 
         Ok(match_data)
     }
+
+    pub async fn get_player_data(&self, player_id: i32) -> Result<PlayerData> {
+        Ok(query_as!(
+            PlayerData,
+            "SELECT r.player_id, p.first_name, p.last_name, r.after_rating rating FROM player p
+            JOIN rating r ON r.player_id = p.id
+            WHERE p.id = $1
+            ORDER BY r.id DESC
+            LIMIT 1",
+            player_id
+        )
+        .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_player_datas(&self, limit: i32) -> Result<Vec<PlayerData>> {
+        Ok(query_as!(
+            PlayerData,
+            "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r
+            JOIN (
+                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p
+                JOIN rating r ON r.player_id = p.id
+                GROUP BY r.player_id, p.first_name, p.last_name
+            ) s ON s.rating_id = r.id AND s.player_id = r.player_id
+            ORDER BY rating DESC
+            LIMIT $1",
+            limit as i64
+        )
+        .fetch_all(&self.pool)
+        .await?)
+    }
 }

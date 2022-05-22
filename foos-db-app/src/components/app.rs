@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use super::{Header, ImportComponent, Matches, RecentMatches};
+use super::*;
 
 use yew_router::prelude::*;
 
@@ -22,7 +22,7 @@ fn switch(routes: Route) -> Html {
         <>
             <Header />
             {match routes {
-                Route::Home => html! { <RecentMatches /> },
+                Route::Home => html! { <Home /> },
                 Route::Matches => html! { <Matches /> },
                 Route::Import => html! {
                     <ImportComponent />

@@ -5,6 +5,7 @@ mod player_match;
 mod fast_player;
 mod rating;
 mod match_data;
+mod player_data;
 
 pub use player::*;
 pub use tournament::*;
@@ -13,3 +14,4 @@ pub use player_match::*;
 pub use fast_player::*;
 pub use rating::*;
 pub use match_data::*;
+pub use player_data::*;

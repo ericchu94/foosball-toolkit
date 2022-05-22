@@ -9,7 +9,7 @@ pub fn RecentMatches() -> Html {
 
     html! {
         <>
-            <div class="card">
+            <div class="card my-3">
                 <div class="card-header">
                 {"Recent Matches"}
                 </div>
