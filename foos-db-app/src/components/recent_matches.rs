@@ -1,11 +1,10 @@
-use yew::prelude::*;
-use crate::hooks::use_matches;
 use super::MatchComponent;
+use crate::hooks::use_match_datas;
+use yew::prelude::*;
 
 #[function_component]
 pub fn RecentMatches() -> Html {
-
-    let matches = use_matches(5, 0);
+    let match_datas = use_match_datas(5, 0);
 
     html! {
         <>
@@ -14,9 +13,9 @@ pub fn RecentMatches() -> Html {
                 {"Recent Matches"}
                 </div>
                 <div class="list-group list-group-flush">
-                    {matches.iter().cloned().map(|r#match| {
+                    {match_datas.iter().cloned().map(|match_data| {
                         html!{
-                            <MatchComponent {r#match} />
+                            <MatchComponent {match_data} />
                         }
                     }).collect::<Html>()}
                 </div>

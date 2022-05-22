@@ -3,7 +3,7 @@ use time::OffsetDateTime;
 
 use super::Winner;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MatchData {
     #[serde(default)]
     pub id: i32,

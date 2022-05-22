@@ -1,13 +1,13 @@
 use super::MatchComponent;
-use crate::hooks::use_matches::get_matches_observable;
-use crate::models::Match;
+use crate::hooks::get_match_datas_observable;
+use crate::models::*;
 use rxrust::prelude::*;
 use yew::prelude::*;
 
 #[function_component]
 pub fn Matches() -> Html {
     let limit = 10;
-    let matches = use_state(Vec::<Match>::new);
+    let match_datas = use_state(Vec::<MatchData>::new);
 
     let offset = use_state(|| 0);
 
@@ -19,14 +19,14 @@ pub fn Matches() -> Html {
     };
 
     {
-        let matches = matches.clone();
+        let match_datas = match_datas.clone();
         use_effect_with_deps(
             move |&offset| {
-                let mut subscription = get_matches_observable(limit, offset).subscribe(
-                    move |mut new_matches: Vec<Match>| {
-                        let mut v = (*matches).clone();
-                        v.append(&mut new_matches);
-                        matches.set(v);
+                let mut subscription = get_match_datas_observable(limit, offset).subscribe(
+                    move |mut new: Vec<MatchData>| {
+                        let mut v = (*match_datas).clone();
+                        v.append(&mut new);
+                        match_datas.set(v);
                     },
                 );
                 move || {
@@ -39,15 +39,15 @@ pub fn Matches() -> Html {
 
     html! {
         <>
-            <div class="card">
+            <div class="card my-3">
                 <div class="card-header">
                 {"Matches"}
                 </div>
                 <div class="list-group list-group-flush">
-                    {matches.iter().cloned().map(|r#match| {
-                        let key = r#match.id;
+                    {match_datas.iter().cloned().map(|match_data| {
+                        let key = match_data.id;
                         html!{
-                            <MatchComponent {key} {r#match} />
+                            <MatchComponent {key} {match_data} />
                         }
                     }).collect::<Html>()}
                     <button type="button" class="text-center list-group-item list-group-item-action" aria-current="true" {onclick}>{"More ..."}</button>

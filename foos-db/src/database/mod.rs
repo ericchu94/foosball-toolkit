@@ -1,3 +1,5 @@
+use std::{cmp::Reverse, collections::HashMap};
+
 use sqlx::{query, query_as, query_as_unchecked, PgPool};
 use thiserror::Error;
 use time::OffsetDateTime;
@@ -313,48 +315,36 @@ impl Database {
         WHERE m.id = $1", match_id)
         .fetch_all(&self.pool).await?;
 
-        let match_data = match_data_rows
-            .into_iter()
-            .map(|row| {
-                let id = row.id;
-                let tournament_name = row.tournament_name;
-                let timestamp = row.timestamp;
-                let winner = row.winner;
-                let first_name = row.first_name;
-                let last_name = row.last_name;
-                let before_rating = row.before_rating;
-                let after_rating = row.after_rating;
-                let team = row.team;
-
-                let player = MatchDataPlayer {
-                    first_name,
-                    last_name,
-                    before_rating,
-                    after_rating,
-                };
-
-                let (team1, team2) = match team {
-                    Team::Team1 => (vec![player], vec![]),
-                    Team::Team2 => (vec![], vec![player]),
-                };
-
-                MatchData {
-                    id,
-                    tournament_name,
-                    timestamp,
-                    winner,
-                    team1,
-                    team2,
-                }
-            })
-            .reduce(|mut a, mut b| {
-                a.team1.append(&mut b.team1);
-                a.team2.append(&mut b.team2);
-                a
-            })
-            .unwrap();
+        let match_data = match_data_rows.into_iter().map(MatchData::from).collect();
 
         Ok(match_data)
+    }
+
+    pub async fn get_match_datas(&self, limit: i32, offset: i32) -> Result<Vec<MatchData>> {
+        let match_data_rows = query_as_unchecked!(MatchDataRow,
+            "SELECT t.name as tournament_name, m.id, m.timestamp, m.winner, p.first_name, p.last_name, r.before_rating, r.after_rating, pm.team FROM match m
+            JOIN player_match pm ON pm.match_id = m.id
+            JOIN rating r on r.match_id = m.id AND r.player_id = pm.player_id
+            JOIN player p on p.id = pm.player_id
+            JOIN tournament t on t.id = m.tournament_id
+            WHERE m.id IN (SELECT id FROM match ORDER BY timestamp DESC LIMIT $1 OFFSET $2)", limit, offset)
+        .fetch_all(&self.pool).await?;
+
+        let map = match_data_rows.into_iter().map(MatchData::from).fold(
+            HashMap::new(),
+            |mut acc, match_data| {
+                acc.entry(match_data.id).or_insert(vec![]).push(match_data);
+                acc
+            },
+        );
+
+        let mut match_datas = map
+            .into_values()
+            .map(|v| v.into_iter().collect::<MatchData>())
+            .collect::<Vec<MatchData>>();
+        match_datas.sort_by_key(|match_data| Reverse(match_data.timestamp));
+
+        Ok(match_datas)
     }
 
     pub async fn get_player_data(&self, player_id: i32) -> Result<PlayerData> {
@@ -382,7 +372,8 @@ impl Database {
             ) s ON s.rating_id = r.id AND s.player_id = r.player_id
             ORDER BY rating DESC
             LIMIT $1 OFFSET $2",
-            limit as i64, offset as i64
+            limit as i64,
+            offset as i64
         )
         .fetch_all(&self.pool)
         .await?)
