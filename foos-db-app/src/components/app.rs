@@ -10,6 +10,8 @@ pub enum Route {
     Home,
     #[at("/matches")]
     Matches,
+    #[at("/players")]
+    Players,
     #[at("/import")]
     Import,
     #[not_found]
@@ -24,6 +26,7 @@ fn switch(routes: Route) -> Html {
             {match routes {
                 Route::Home => html! { <Home /> },
                 Route::Matches => html! { <Matches /> },
+                Route::Players => html! { <Players /> },
                 Route::Import => html! {
                     <ImportComponent />
                 },

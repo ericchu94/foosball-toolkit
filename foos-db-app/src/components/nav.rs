@@ -19,7 +19,7 @@ pub fn Nav() -> Html {
                     <Link<Route> to={Route::Matches} classes={classes!("nav-link")}>{"Matches"}</Link<Route>>
                 </li>
                 <li class="nav-item">
-                    <Link<Route> to={Route::Home} classes={classes!("nav-link", "disabled")} disabled={true}>{"Players"}</Link<Route>>
+                    <Link<Route> to={Route::Players} classes={classes!("nav-link")}>{"Players"}</Link<Route>>
                 </li>
                 <li class="nav-item">
                     <Link<Route> to={Route::Import} classes={classes!("nav-link")}>{"Import"}</Link<Route>>

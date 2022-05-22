@@ -9,6 +9,7 @@ mod recent_matches;
 mod top_players;
 mod home;
 mod player_component;
+mod players;
 
 pub use app::*;
 pub use header::*;
@@ -21,3 +22,4 @@ pub use recent_matches::*;
 pub use top_players::*;
 pub use home::*;
 pub use player_component::*;
+pub use players::*;
