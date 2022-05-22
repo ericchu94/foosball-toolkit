@@ -1,9 +1,9 @@
 use time::macros::format_description;
 use yew::prelude::*;
 
+use super::PlayerNameComponent;
 use crate::hooks::use_match_data;
 use crate::models::*;
-use crate::player_name_component::PlayerNameComponent;
 
 #[derive(Properties, PartialEq)]
 pub struct MatchProps {

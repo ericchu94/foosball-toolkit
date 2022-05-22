@@ -1,5 +1,5 @@
+use super::MatchComponent;
 use crate::hooks::use_matches::get_matches_observable;
-use crate::match_component::MatchComponent;
 use crate::models::Match;
 use rxrust::prelude::*;
 use yew::prelude::*;
@@ -22,12 +22,13 @@ pub fn Matches() -> Html {
         let matches = matches.clone();
         use_effect_with_deps(
             move |&offset| {
-                let mut subscription =
-                    get_matches_observable(limit, offset).subscribe(move |mut new_matches: Vec<Match>| {
+                let mut subscription = get_matches_observable(limit, offset).subscribe(
+                    move |mut new_matches: Vec<Match>| {
                         let mut v = (*matches).clone();
                         v.append(&mut new_matches);
                         matches.set(v);
-                    });
+                    },
+                );
                 move || {
                     subscription.unsubscribe();
                 }

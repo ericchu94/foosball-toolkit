@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use crate::hooks::use_matches;
-use crate::match_component::MatchComponent;
+use super::MatchComponent;
 
 #[function_component]
 pub fn RecentMatches() -> Html {

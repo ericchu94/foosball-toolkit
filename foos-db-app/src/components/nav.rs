@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::Route;
+use super::Route;
 
 use yew_router::prelude::*;
 

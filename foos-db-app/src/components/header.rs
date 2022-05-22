@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::nav::Nav;
+use super::Nav;
 
 #[function_component]
 pub fn Header() -> Html {
