@@ -1,15 +1,13 @@
 mod fast;
 mod ktool;
 
-use std::collections::HashMap;
-
-use actix_multipart::Multipart;
+use actix_multipart::{Multipart, MultipartError};
 use actix_web::{
     post,
     web::{self, Data, ServiceConfig},
     HttpResponse, Responder, ResponseError, Result,
 };
-use futures::{stream, StreamExt};
+use futures::{future, stream, StreamExt, TryStreamExt};
 use zip::result::ZipError;
 
 use crate::{
@@ -34,6 +32,8 @@ pub enum ImportError {
     MissingField(&'static str),
     #[error("missing player with id `{0}`")]
     MissingPlayer(u32),
+    #[error("multipart error `{0}`")]
+    Multipart(#[from] MultipartError),
 }
 
 impl ResponseError for ImportError {}
@@ -41,23 +41,9 @@ impl ResponseError for ImportError {}
 impl ResponseError for RatingServiceError {}
 
 async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    let map = payload
-        .map(Result::unwrap)
-        .then(|field| async {
-            let name = field.name().to_owned();
-            let value = field
-                .map(Result::unwrap)
-                .flat_map(stream::iter)
-                .collect::<Vec<u8>>()
-                .await;
-            (name, value)
-        })
-        .collect::<HashMap<String, Vec<u8>>>()
-        .await;
+    let file = file_payload(payload).await?;
 
-    let file = &map["file"];
-
-    let kt = parse(file)?;
+    let kt = parse(&file)?;
 
     import_kt(database, kt).await?;
 
@@ -65,21 +51,7 @@ async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Resu
 }
 
 async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-    let map = payload
-        .map(Result::unwrap)
-        .then(|field| async {
-            let name = field.name().to_owned();
-            let value = field
-                .map(Result::unwrap)
-                .flat_map(stream::iter)
-                .collect::<Vec<u8>>()
-                .await;
-            (name, value)
-        })
-        .collect::<HashMap<String, Vec<u8>>>()
-        .await;
-
-    let file = &map["file"];
+    let file = file_payload(payload).await?;
 
     let fast = fast::parse(&mut file.as_slice())?;
 
@@ -88,25 +60,32 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
     Ok(HttpResponse::Ok())
 }
 
+async fn file_payload(payload: Multipart) -> ImportResult<Vec<u8>> {
+    Box::pin(
+        payload
+            .map_err(ImportError::from)
+            .and_then(|field| async {
+                let name = field.name().to_owned();
+                let value = field
+                    .map_ok(|b| stream::iter(b).map(ImportResult::Ok))
+                    .try_flatten()
+                    .try_collect::<Vec<u8>>()
+                    .await?;
+                Ok((name, value))
+            })
+            .try_filter(|(name, _)| future::ready(name == "file"))
+            .map_ok(|(_, data)| data),
+    )
+    .try_next()
+    .await?
+    .ok_or(ImportError::MissingField("file"))
+}
+
 async fn import_fast_init_impl(
     payload: Multipart,
     database: Data<Database>,
 ) -> Result<impl Responder> {
-    let map = payload
-        .map(Result::unwrap)
-        .then(|field| async {
-            let name = field.name().to_owned();
-            let value = field
-                .map(Result::unwrap)
-                .flat_map(stream::iter)
-                .collect::<Vec<u8>>()
-                .await;
-            (name, value)
-        })
-        .collect::<HashMap<String, Vec<u8>>>()
-        .await;
-
-    let file = &map["file"];
+    let file = file_payload(payload).await?;
 
     let fast = fast::parse(&mut file.as_slice())?;
 
@@ -121,11 +100,11 @@ async fn import_ktool(
     database: Data<Database>,
     rating_service: Data<RatingService>,
 ) -> Result<impl Responder> {
-    let response = import_ktool_impl(payload, database).await;
+    let response = import_ktool_impl(payload, database).await?;
 
     rating_service.compute_all().await?;
 
-    response
+    Ok(response)
 }
 
 #[post("/fast")]
@@ -134,11 +113,11 @@ async fn import_fast(
     database: Data<Database>,
     rating_service: Data<RatingService>,
 ) -> Result<impl Responder> {
-    let response = import_fast_impl(payload, database).await;
+    let response = import_fast_impl(payload, database).await?;
 
     rating_service.compute_all().await?;
 
-    response
+    Ok(response)
 }
 
 #[post("/fast-init")]

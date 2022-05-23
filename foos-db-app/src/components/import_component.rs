@@ -93,7 +93,7 @@ pub fn ImportComponent() -> Html {
                     observable::from_future(data, LocalSpawner {})
                         .flat_map(move |data| {
                             status.set(format!("Uploading {file_name}"));
-                            let part = reqwest::multipart::Part::bytes(data);
+                            let part = reqwest::multipart::Part::bytes(data).file_name(file_name.clone());
                             let form = reqwest::multipart::Form::new().part("file", part);
                             let client = reqwest::Client::new();
                             observable::from_future(
