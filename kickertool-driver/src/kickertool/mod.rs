@@ -8,7 +8,7 @@ use regex::Regex;
 use rxrust::prelude::*;
 
 use crate::{
-    sinks::{file::FileSink, Sink, http_post::HttpPostSink},
+    sinks::{file::FileSink, http_post::HttpPostSink, Sink},
     sources::browser::headless_chrome::{UrlHtml, UrlHtmlObservable},
 };
 
@@ -17,11 +17,15 @@ use self::scraper::kickertool_data_from_qualification_display;
 type KickertoolDataObservable =
     impl Clone + Observable<Item = KickertoolData, Err = ()> + SharedObservable;
 
+type DataSubscription = impl SubscriptionLike;
+type StandingsSubscription = impl SubscriptionLike;
+type TeamSubscription = impl SubscriptionLike;
+
 pub struct Kickertool {
-    team_subscriptions: HashMap<(u8, usize), Box<dyn SubscriptionLike>>,
-    standings_subscription: Option<Box<dyn SubscriptionLike>>,
+    team_subscriptions: HashMap<(u8, usize), SubscriptionGuard<TeamSubscription>>,
+    standings_subscription: Option<SubscriptionGuard<StandingsSubscription>>,
     kickertool_data_observable: KickertoolDataObservable,
-    data_subscription: Option<Box<dyn SubscriptionLike>>,
+    data_subscription: Option<SubscriptionGuard<DataSubscription>>,
 }
 
 fn get_kickertool_data_observable(
@@ -67,8 +71,6 @@ impl Kickertool {
         s
     }
     fn data_subscribe(&mut self) {
-        Self::unsubscribe(self.data_subscription.as_mut());
-
         let sink = HttpPostSink::new("http://localhost:8000/data");
 
         let s = self
@@ -77,12 +79,12 @@ impl Kickertool {
             .into_shared()
             .subscribe(move |data| sink.sink(data));
 
-            self.data_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
+        let guard = s.unsubscribe_when_dropped();
+
+        self.data_subscription = Some(guard);
     }
 
     fn standings_subscribe(&mut self) {
-        Self::unsubscribe(self.standings_subscription.as_mut());
-
         let sink = FileSink::new("standings.txt");
 
         let s = self
@@ -96,7 +98,7 @@ impl Kickertool {
             .into_shared()
             .subscribe(move |standings| sink.sink(standings));
 
-        self.standings_subscription = (Box::new(s) as Box<dyn SubscriptionLike>).into();
+        self.standings_subscription = Some(s.unsubscribe_when_dropped());
     }
 
     fn get_table_observable(&self, number: u8) -> TableObservable {
@@ -108,8 +110,6 @@ impl Kickertool {
     }
 
     fn team_subscribe(&mut self, table_number: u8, team_number: usize) {
-        self.team_unsubscribe(table_number, team_number);
-
         let sink = FileSink::new(format!("table{table_number}-team{team_number}.txt"));
 
         let s = self
@@ -124,34 +124,7 @@ impl Kickertool {
             .into_shared()
             .subscribe(move |standings| sink.sink(standings));
 
-        let mut subscription = self.get_team_subscription_mut(table_number, team_number);
-        subscription.replace(&mut (Box::new(s) as Box<dyn SubscriptionLike>));
-    }
-
-    fn team_unsubscribe(&mut self, table_number: u8, team_number: usize) {
-        Self::unsubscribe(self.get_team_subscription_mut(table_number, team_number));
-    }
-
-    fn unsubscribe(mut subscription: Option<&mut Box<dyn SubscriptionLike>>) {
-        if let Some(subscription) = subscription.take() {
-            subscription.unsubscribe();
-        }
-    }
-
-    fn get_team_subscription_mut(
-        &mut self,
-        table_number: u8,
-        team_number: usize,
-    ) -> Option<&mut Box<dyn SubscriptionLike>> {
         self.team_subscriptions
-            .get_mut(&(table_number, team_number))
-    }
-}
-
-impl Drop for Kickertool {
-    fn drop(&mut self) {
-        self.team_unsubscribe(1, 1);
-        self.team_unsubscribe(1, 2);
-        Self::unsubscribe(self.standings_subscription.as_mut());
+            .insert((table_number, team_number), s.unsubscribe_when_dropped());
     }
 }
