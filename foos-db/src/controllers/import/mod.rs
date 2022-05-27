@@ -1,6 +1,8 @@
 mod fast;
 mod ktool;
 
+use std::time::Instant;
+
 use actix_multipart::{Multipart, MultipartError};
 use actix_web::{
     post,
@@ -55,9 +57,13 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
 
     let fast = fast::parse(&mut file.as_slice())?;
 
+    let start = Instant::now();
+
     fast::import_fast(database, fast).await?;
 
-    Ok(HttpResponse::Ok())
+    let end = Instant::now();
+
+    Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 
 async fn file_payload(payload: Multipart) -> ImportResult<Vec<u8>> {
@@ -89,9 +95,14 @@ async fn import_fast_init_impl(
 
     let fast = fast::parse(&mut file.as_slice())?;
 
+    let start = Instant::now();
+
     fast::import_fast_init(database, fast).await?;
 
-    Ok(HttpResponse::Ok())
+    let end = Instant::now();
+
+    println!("fast-init import took {} milliseconds", (end - start).as_millis());
+    Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 
 #[post("/ktool")]

@@ -193,20 +193,22 @@ pub async fn import_fast_init(database: Data<Database>, f: fast::Fast) -> Import
         )
         .map(|m| &m.federation_member);
 
-    for fm in federation_members {
-        let license = fm.no_license.clone();
-        let first_name = fm.player.person.first_name.clone();
-        let last_name = fm.player.person.last_name.clone();
+    let fast_players = federation_members
+        .map(|fm| {
+            let license = fm.no_license.clone();
+            let first_name = fm.player.person.first_name.clone();
+            let last_name = fm.player.person.last_name.clone();
 
-        let fast_player = FastPlayer {
-            id: 0,
-            license,
-            first_name,
-            last_name,
-        };
+            FastPlayer {
+                id: 0,
+                license,
+                first_name,
+                last_name,
+            }
+        })
+        .collect::<Vec<FastPlayer>>();
 
-        database.create_fast_player(fast_player).await?;
-    }
+    database.create_fast_players(fast_players).await?;
 
     Ok(())
 }

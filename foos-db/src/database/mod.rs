@@ -166,12 +166,25 @@ impl Database {
         Ok(())
     }
 
-    pub async fn create_fast_player(&self, fast_player: FastPlayer) -> Result<()> {
+    pub async fn create_fast_players(&self, fast_players: Vec<FastPlayer>) -> Result<()> {
+        let licenses = fast_players
+            .iter()
+            .map(|fp| fp.license.clone())
+            .collect::<Vec<String>>();
+        let first_names = fast_players
+            .iter()
+            .map(|fp| fp.first_name.clone())
+            .collect::<Vec<String>>();
+        let last_names = fast_players
+            .iter()
+            .map(|fp| fp.last_name.clone())
+            .collect::<Vec<String>>();
+
         query!(
-            "INSERT INTO fast_player (license, first_name, last_name) VALUES ($1, $2, $3)",
-            fast_player.license,
-            fast_player.first_name,
-            fast_player.last_name,
+            "INSERT INTO fast_player (license, first_name, last_name) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[])",
+            &licenses,
+            &first_names,
+            &last_names,
         )
         .execute(&self.pool)
         .await?;
