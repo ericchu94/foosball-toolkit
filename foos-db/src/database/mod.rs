@@ -64,6 +64,34 @@ impl Database {
         .await?)
     }
 
+    pub async fn merge_and_delete_player(&self, from: i32, to: i32) -> Result<()> {
+        self.merge_player(from, to).await?;
+
+        self.delete_player(from).await?;
+
+        Ok(())
+    }
+
+    async fn merge_player(&self, from: i32, to: i32) -> Result<()> {
+        query!(
+            "UPDATE player_match SET player_id = $1 WHERE player_id = $2",
+            to,
+            from
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    async fn delete_player(&self, id: i32) -> Result<()> {
+        query!("DELETE FROM player WHERE id = $1", id,)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn get_tournaments(&self) -> Result<Vec<Tournament>> {
         let tournaments = query_as!(Tournament, "SELECT * FROM tournament")
             .fetch_all(&self.pool)
@@ -420,5 +448,13 @@ impl Database {
         )
         .fetch_all(&self.pool)
         .await?)
+    }
+
+    pub async fn clear_imports(&self) -> Result<()> {
+        query!("TRUNCATE match, player_match, player, game, tournament, rating")
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
     }
 }

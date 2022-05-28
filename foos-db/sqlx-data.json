@@ -1,5 +1,19 @@
 {
   "db": "PostgreSQL",
+  "0ff86cfff4c8d1ccf5dfa8c569d358d1893abf6062b36396715118cc807be411": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE player SET first_name = $1, last_name = $2 WHERE id = $3"
+  },
   "17afea837104c259b4269f80d137f17ac9bc8cb281cd08652bc89c3a4c8c2662": {
     "describe": {
       "columns": [
@@ -44,6 +58,36 @@
       }
     },
     "query": "SELECT * FROM rating WHERE player_id = $1 AND match_id = $2"
+  },
+  "1cd6971890bd327c596a83cba214edaf32d8ec10ed20e6fa839771deb5ec5627": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM player ORDER BY id ASC"
   },
   "20a2bb307b53a88062743b8624db24738a33bbc78261b395af2f0898871bf935": {
     "describe": {
@@ -293,6 +337,19 @@
       }
     },
     "query": "INSERT INTO tournament (name, source) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+  },
+  "273489a807c13d68d6ee8f819afccb13c586be33b00f492eeede3f462015a24a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE player_match SET player_id = $1 WHERE player_id = $2"
   },
   "337ed72ebeeb8540beb7cb662561660d9e240f61ee7000214ce201285642526f": {
     "describe": {
@@ -660,6 +717,18 @@
     },
     "query": "INSERT INTO game (match_id, score1, score2) SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[])"
   },
+  "b14ea0dc593ccfb21f13f14ba80a2d70521d929abc903eeae5788284a08c7ec1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM player WHERE id = $1"
+  },
   "b5261faa011ef3577519678a8f336386819e128578cbf906b302142d4aaa6192": {
     "describe": {
       "columns": [
@@ -848,35 +917,15 @@
     },
     "query": "INSERT INTO player_match (player_id, match_id, team) VALUES ($1, $2, $3)"
   },
-  "f74a3006cda80cc0c88aac8c7652d71e7050815e47d6c0826be4756251e44460": {
+  "f7609d810736e49544556a5c4d2a71dd20e94751a2acd16091d39abb4baa47be": {
     "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "first_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "last_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": []
       }
     },
-    "query": "SELECT * FROM player"
+    "query": "TRUNCATE match, player_match, player, game, tournament, rating"
   },
   "f9ea8063ed4c857a89cfb2f217ff9990d074fc5afe3f18226f6c7398cf802c16": {
     "describe": {

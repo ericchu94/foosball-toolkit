@@ -3,6 +3,7 @@ use actix_web::{
     web::{self, Data, Json, Path, ServiceConfig},
     HttpResponse, Responder, Result,
 };
+use serde::Deserialize;
 
 use crate::{database::Database, models::Player};
 
@@ -32,12 +33,27 @@ async fn create_player(player: Json<Player>, database: Data<Database>) -> Result
     Ok(HttpResponse::Ok())
 }
 
+#[derive(Deserialize)]
+struct PlayerMerge {
+    from: i32,
+    to: i32,
+}
+
+#[post("/merge")]
+async fn merge(database: Data<Database>, merge: Json<PlayerMerge>) -> Result<impl Responder> {
+    let merge = merge.0;
+    database.merge_and_delete_player(merge.from, merge.to).await?;
+
+    Ok(HttpResponse::Ok())
+}
+
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope("/player")
             .service(get_players)
             .service(get_player_by_id)
             .service(create_player)
-            .service(put_player),
+            .service(put_player)
+            .service(merge),
     );
 }

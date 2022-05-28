@@ -136,6 +136,13 @@ async fn import_fast_init(payload: Multipart, database: Data<Database>) -> Resul
     import_fast_init_impl(payload, database).await
 }
 
+#[post("/clear")]
+async fn clear(database: Data<Database>) -> Result<impl Responder> {
+    database.clear_imports().await?;
+
+    Ok(HttpResponse::Ok())
+}
+
 #[post("")]
 async fn import(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
     import_ktool_impl(payload, database).await
@@ -147,6 +154,7 @@ pub fn config(cfg: &mut ServiceConfig) {
             .service(import)
             .service(import_ktool)
             .service(import_fast)
-            .service(import_fast_init),
+            .service(import_fast_init)
+            .service(clear),
     );
 }
