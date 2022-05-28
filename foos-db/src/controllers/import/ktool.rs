@@ -38,10 +38,17 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
 
     let get_players_from_team = |team_id: &str| {
         let team = kt.teams.iter().find(|team| team.id == team_id).unwrap();
-        team.players
+        let players = team.players
             .iter()
             .map(|player| get_player(&player.id).name.clone())
-            .collect::<Vec<String>>()
+            .collect::<Vec<String>>();
+
+        if !players.is_empty() {
+            return players;
+        }
+
+        // Try to get players from team name
+        team.name.as_deref().unwrap_or_default().split('/').map(|p| p.trim().to_owned()).collect::<Vec<String>>()
     };
 
     let get_games = |play: &ktool::Play| {

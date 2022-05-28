@@ -64,6 +64,8 @@ pub struct Team {
     pub id: String,
     pub r#type: String,
     pub meta: ParticipantMeta,
+    #[serde(rename = "_name")]
+    pub name: Option<String>,
     pub start_index: u32,
     pub players: Vec<PlayerRef>,
     pub removed: bool,
