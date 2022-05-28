@@ -259,6 +259,21 @@ impl Database {
         Ok(player_matches)
     }
 
+    pub async fn get_player_matches_by_match_ids(
+        &self,
+        match_ids: &[i32],
+    ) -> Result<Vec<PlayerMatch>> {
+        let player_matches = query_as_unchecked!(
+            PlayerMatch,
+            "SELECT * FROM player_match WHERE match_id = ANY($1)",
+            match_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(player_matches)
+    }
+
     pub async fn get_matches(&self, limit: i32, offset: i32) -> Result<Vec<Match>> {
         let matches = query_as_unchecked!(
             Match,
@@ -319,16 +334,14 @@ impl Database {
         .await?)
     }
 
-    pub async fn get_latest_rating_for_players(&self, player_ids: &[i32]) -> Result<Vec<Rating>> {
+    pub async fn get_latest_rating_for_all_players(&self) -> Result<Vec<Rating>> {
         Ok(query_as_unchecked!(
             Rating,
             "SELECT r.* FROM rating r
         JOIN (
             SELECT MAX(id) id, player_id FROM rating r
-            WHERE player_id = ANY($1)
             GROUP BY player_id
         ) sub ON r.id = sub.id AND r.player_id = sub.player_id",
-            player_ids
         )
         .fetch_all(&self.pool)
         .await?)

@@ -7,7 +7,7 @@ pub struct PlayerMatch {
     pub team: Team,
 }
 
-#[derive(Serialize, Deserialize, sqlx::Type, PartialEq, Eq, Hash, Debug)]
+#[derive(Serialize, Deserialize, sqlx::Type, PartialEq, Eq, Hash, Debug, Clone, Copy)]
 #[sqlx(type_name = "team", rename_all = "lowercase")]
 pub enum Team {
     Team1,
