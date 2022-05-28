@@ -6,13 +6,13 @@ use time::OffsetDateTime;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Tournament {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub name: String,
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    pub groups: Vec<()>,
+    pub groups: Vec<Group>,
     pub players: Vec<Player>,
     pub teams: Vec<Team>,
     pub rounds: Vec<Round>,
@@ -30,12 +30,38 @@ pub struct Tournament {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct Group {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub r#type: String,
+    pub teams: Vec<TeamRef>,
+    pub rounds: Vec<GroupRound>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct GroupRound {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub r#type: String,
+    pub name: String,
+    pub plays: Vec<PlayRef>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PlayRef {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub r#type: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Player {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub meta: ParticipantMeta,
-    #[serde(rename = "_name")] 
+    #[serde(rename = "_name")]
     pub name: String,
     pub weight: u32,
     pub start_index: u32,
@@ -47,10 +73,10 @@ pub struct Player {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ParticipantMeta {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
-    #[serde(rename = "_addedLater")] 
+    #[serde(rename = "_addedLater")]
     pub added_later: bool,
     pub added_in_round: u32,
     pub had_bye: bool,
@@ -60,7 +86,7 @@ pub struct ParticipantMeta {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Team {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub meta: ParticipantMeta,
@@ -75,14 +101,14 @@ pub struct Team {
 
 #[derive(Deserialize, Debug)]
 pub struct PlayerRef {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Round {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub name: String,
@@ -92,7 +118,7 @@ pub struct Round {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Play {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub valid: bool,
@@ -117,7 +143,7 @@ pub struct Play {
 
 #[derive(Deserialize, Debug)]
 pub struct TeamRef {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
 }
@@ -125,7 +151,7 @@ pub struct TeamRef {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Discipline {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub sets: Vec<Result>,
@@ -136,7 +162,7 @@ pub struct Discipline {
 
 #[derive(Deserialize, Debug)]
 pub struct Result {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub team1: u32,
@@ -145,7 +171,7 @@ pub struct Result {
 
 #[derive(Deserialize, Debug)]
 pub struct TableRef {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
 }
@@ -153,7 +179,7 @@ pub struct TableRef {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Ko {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub levels: Vec<Level>,
@@ -170,7 +196,7 @@ pub struct Ko {
 
 #[derive(Deserialize, Debug)]
 pub struct Level {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub plays: Vec<Play>,
@@ -180,7 +206,7 @@ pub struct Level {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TournamentOptions {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub name: Option<String>,
@@ -208,13 +234,12 @@ pub struct TournamentOptions {
     pub close_game_points_lose: u32,
     pub num_players_per_team: u32,
     pub dyp_mode: bool,
-
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DisciplineOptions {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub num_points: u32,
@@ -225,7 +250,7 @@ pub struct DisciplineOptions {
 
 #[derive(Deserialize, Debug)]
 pub struct Table {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
     pub name: String,
@@ -235,7 +260,7 @@ pub struct Table {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TableConfig {
-    #[serde(rename = "_id")] 
+    #[serde(rename = "_id")]
     pub id: String,
     pub ignore_sort: bool,
     pub visible: bool,
