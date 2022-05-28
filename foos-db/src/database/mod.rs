@@ -27,7 +27,7 @@ impl Database {
     }
 
     pub async fn get_players(&self) -> Result<Vec<Player>> {
-        let players = query_as!(Player, "SELECT * FROM player")
+        let players = query_as!(Player, "SELECT * FROM player ORDER BY id ASC")
             .fetch_all(&self.pool)
             .await?;
 
@@ -153,10 +153,7 @@ impl Database {
         Ok(r#match)
     }
 
-    pub async fn create_games(
-        &self,
-        games: Vec<Game>,
-    ) -> Result<()> {
+    pub async fn create_games(&self, games: Vec<Game>) -> Result<()> {
         let match_ids = games.iter().map(|g| g.match_id).collect::<Vec<i32>>();
         let score1s = games.iter().map(|g| g.score1).collect::<Vec<i32>>();
         let score2s = games.iter().map(|g| g.score2).collect::<Vec<i32>>();
@@ -253,6 +250,19 @@ impl Database {
             .await?;
 
         Ok(player)
+    }
+
+    pub async fn update_player(&self, player: Player) -> Result<()> {
+        query!(
+            "UPDATE player SET first_name = $1, last_name = $2 WHERE id = $3",
+            player.first_name,
+            player.last_name,
+            player.id
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn delete_ratings_after_timestamp(&self, timestamp: OffsetDateTime) -> Result<()> {

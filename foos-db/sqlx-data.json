@@ -1,19 +1,5 @@
 {
   "db": "PostgreSQL",
-  "115e5d1384c370f2ba19d0967667a54e904e31c18f03de19b70ac388aa4d36f5": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "INSERT INTO fast_player (license, first_name, last_name) VALUES ($1, $2, $3)"
-  },
   "17afea837104c259b4269f80d137f17ac9bc8cb281cd08652bc89c3a4c8c2662": {
     "describe": {
       "columns": [
@@ -58,6 +44,97 @@
       }
     },
     "query": "SELECT * FROM rating WHERE player_id = $1 AND match_id = $2"
+  },
+  "20a2bb307b53a88062743b8624db24738a33bbc78261b395af2f0898871bf935": {
+    "describe": {
+      "columns": [
+        {
+          "name": "tournament_name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "timestamp",
+          "ordinal": 2,
+          "type_info": "Timestamptz"
+        },
+        {
+          "name": "winner",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "none",
+                  "team1",
+                  "team2",
+                  "draw"
+                ]
+              },
+              "name": "winner"
+            }
+          }
+        },
+        {
+          "name": "first_name",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "before_rating",
+          "ordinal": 6,
+          "type_info": "Int4"
+        },
+        {
+          "name": "after_rating",
+          "ordinal": 7,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team",
+          "ordinal": 8,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "team1",
+                  "team2"
+                ]
+              },
+              "name": "team"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT t.name as tournament_name, m.id, m.timestamp, m.winner, p.first_name, p.last_name, r.before_rating, r.after_rating, pm.team FROM match m\n            JOIN player_match pm ON pm.match_id = m.id\n            JOIN rating r on r.match_id = m.id AND r.player_id = pm.player_id\n            JOIN player p on p.id = pm.player_id\n            JOIN tournament t on t.id = m.tournament_id\n            WHERE m.id IN (SELECT id FROM match ORDER BY timestamp DESC LIMIT $1 OFFSET $2)"
   },
   "213955a68eb6607bd2dba903b14e30c9b94f82924d3d1562ac6737501fe7aac0": {
     "describe": {
@@ -216,6 +293,20 @@
       }
     },
     "query": "INSERT INTO tournament (name, source) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+  },
+  "337ed72ebeeb8540beb7cb662561660d9e240f61ee7000214ce201285642526f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "INSERT INTO fast_player (license, first_name, last_name) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[])"
   },
   "366e289bb8296a771bd937cd1441900abb8b0b62e090586d31e5f8d18bd713ed": {
     "describe": {
@@ -554,6 +645,20 @@
       }
     },
     "query": "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC"
+  },
+  "a06b22b6cadc4082e88a38e3dc4ce9de94963b132e195ef4d3466a030cb63f5b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4Array",
+          "Int4Array",
+          "Int4Array"
+        ]
+      }
+    },
+    "query": "INSERT INTO game (match_id, score1, score2) SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[])"
   },
   "b5261faa011ef3577519678a8f336386819e128578cbf906b302142d4aaa6192": {
     "describe": {

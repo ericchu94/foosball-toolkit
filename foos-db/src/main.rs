@@ -11,7 +11,11 @@ use rating::RatingService;
 impl ResponseError for database::DatabaseError {}
 
 fn cors() -> Cors {
-    Cors::default().allow_any_origin().send_wildcard()
+    Cors::default()
+        .allow_any_origin()
+        .send_wildcard()
+        .allow_any_method()
+        .allow_any_header()
 }
 
 fn get_connection_string() -> String {

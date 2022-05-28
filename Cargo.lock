@@ -1255,6 +1255,7 @@ dependencies = [
  "serde",
  "time 0.3.9",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
  "yew",

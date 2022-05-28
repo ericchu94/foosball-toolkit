@@ -1,6 +1,6 @@
 use actix_web::{
-    get, post,
-    web::{self, Data, Json, ServiceConfig, Path},
+    get, post, put,
+    web::{self, Data, Json, Path, ServiceConfig},
     HttpResponse, Responder, Result,
 };
 
@@ -17,6 +17,14 @@ async fn get_player_by_id(database: Data<Database>, path: Path<i32>) -> Result<i
     Ok(Json(database.get_player_by_id(id).await?))
 }
 
+#[put("/{id}")]
+async fn put_player(database: Data<Database>, path: Path<i32>, player: Json<Player>) -> Result<impl Responder> {
+    let id = path.into_inner();
+    let mut player = player.0;
+    player.id = id;
+    Ok(Json(database.update_player(player).await?))
+}
+
 #[post("")]
 async fn create_player(player: Json<Player>, database: Data<Database>) -> Result<impl Responder> {
     database.create_player(player.0).await?;
@@ -29,6 +37,7 @@ pub fn config(cfg: &mut ServiceConfig) {
         web::scope("/player")
             .service(get_players)
             .service(get_player_by_id)
-            .service(create_player),
+            .service(create_player)
+            .service(put_player),
     );
 }

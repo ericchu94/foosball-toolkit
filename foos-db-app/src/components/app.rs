@@ -14,6 +14,8 @@ pub enum Route {
     Players,
     #[at("/import")]
     Import,
+    #[at("/player_management")]
+    PlayerManagement,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -30,6 +32,7 @@ fn switch(routes: Route) -> Html {
                 Route::Import => html! {
                     <ImportComponent />
                 },
+                Route::PlayerManagement => html! { <PlayerManagement /> },
                 Route::NotFound => html! { <h1>{ "404" }</h1> },
             }}
         </>
