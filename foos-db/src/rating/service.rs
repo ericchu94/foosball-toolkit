@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
 use thiserror::Error;
 use time::OffsetDateTime;
@@ -141,11 +142,23 @@ impl RatingService {
     }
 
     async fn compute(&self) -> Result<()> {
+        let start = Instant::now();
+
         let matches = self.get_matches_without_ratings().await?;
+
+        let len = matches.len();
 
         for m in matches {
             self.compute_ratings_for_match(m).await?;
         }
+
+        let end = Instant::now();
+
+        println!(
+            "{} ratings computed in {} milliseconds",
+            len,
+            (end - start).as_millis()
+        );
 
         Ok(())
     }
