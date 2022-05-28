@@ -606,7 +606,7 @@ pub struct TeamMatch {
     pub game: Vec<Game>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     #[serde(rename = "$unflatten=scoreTeam1")]
@@ -620,7 +620,7 @@ pub struct Game {
     pub game_statistics: GameStatistics,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GameStatistics;
 

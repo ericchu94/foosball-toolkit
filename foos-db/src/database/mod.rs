@@ -127,7 +127,7 @@ impl Database {
         r#match: Match,
         team1: Vec<Player>,
         team2: Vec<Player>,
-    ) -> Result<()> {
+    ) -> Result<Match> {
         let r#match = self.create_match(r#match).await?;
 
         for player in team1 {
@@ -149,6 +149,26 @@ impl Database {
             };
             self.create_player_match(player_match).await?;
         }
+
+        Ok(r#match)
+    }
+
+    pub async fn create_games(
+        &self,
+        games: Vec<Game>,
+    ) -> Result<()> {
+        let match_ids = games.iter().map(|g| g.match_id).collect::<Vec<i32>>();
+        let score1s = games.iter().map(|g| g.score1).collect::<Vec<i32>>();
+        let score2s = games.iter().map(|g| g.score2).collect::<Vec<i32>>();
+
+        query!(
+            "INSERT INTO game (match_id, score1, score2) SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[])",
+            &match_ids,
+            &score1s,
+            &score2s,
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

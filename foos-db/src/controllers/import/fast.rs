@@ -117,6 +117,25 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
         }
     };
 
+    let get_games = |tm: &TeamMatch| {
+        let mut games = tm.game.clone();
+        games.sort_by_key(|g| g.game_number);
+        games
+            .into_iter()
+            .map(|g| {
+                let score1 = g.score_team1 as i32;
+                let score2 = g.score_team2 as i32;
+                Game {
+                    score1,
+                    score2,
+                    ..Game::default()
+                }
+            })
+            .collect::<Vec<Game>>()
+    };
+
+    let mut all_games = vec![];
+
     for tm in team_matches {
         let f = &f;
         let d = database.clone();
@@ -140,6 +159,8 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             .await;
         let winner = get_winner(tm);
 
+        let mut games = get_games(tm);
+
         let tz = time_tz::timezones::get_by_name(&t.time_zone).unwrap();
 
         let r#match = Match {
@@ -149,15 +170,18 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             winner,
         };
 
-        println!(
-            "{:?} {:?} vs {:?}. Winner: {:?}",
-            r#match.timestamp, players1, players2, winner
-        );
-
-        database
+        let r#match = database
             .create_match_and_players(r#match, players1, players2)
             .await?;
+
+        for g in games.iter_mut() {
+            g.match_id = r#match.id;
+        }
+
+        all_games.append(&mut games);
     }
+
+    database.create_games(all_games).await?;
 
     Ok(())
 }

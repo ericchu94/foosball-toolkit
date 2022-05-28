@@ -30,24 +30,38 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
     plays.sort_by_key(|play| play.time_end);
 
     let get_player = |player_id: &str| {
-        kt
-            .players
+        kt.players
             .iter()
             .find(|player| player.id == player_id)
             .unwrap()
     };
 
     let get_players_from_team = |team_id: &str| {
-        let team = kt
-            .teams
-            .iter()
-            .find(|team| team.id == team_id)
-            .unwrap();
+        let team = kt.teams.iter().find(|team| team.id == team_id).unwrap();
         team.players
             .iter()
             .map(|player| get_player(&player.id).name.clone())
             .collect::<Vec<String>>()
     };
+
+    let get_games = |play: &ktool::Play| {
+        play.disciplines
+            .iter()
+            .flat_map(|d| d.sets.iter())
+            .map(|r| {
+                let score1 = r.team1 as i32;
+                let score2 = r.team2 as i32;
+
+                Game {
+                    score1,
+                    score2,
+                    ..Default::default()
+                }
+            })
+            .collect::<Vec<Game>>()
+    };
+
+    let mut all_games = vec![];
 
     for play in plays {
         let t1 = play.team1.as_ref().unwrap();
@@ -59,30 +73,52 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
         let r#match = Match {
             id: 0,
             tournament_id: Some(tournament.id),
-            timestamp: OffsetDateTime::from_unix_timestamp(play.time_end.unwrap() as i64 / 1000).unwrap(),
+            timestamp: OffsetDateTime::from_unix_timestamp(play.time_end.unwrap() as i64 / 1000)
+                .unwrap(),
             winner,
         };
-        
+
+        let mut games = get_games(play);
+
         println!(
-            "{:?} {:?} vs {:?}. Winner: {:?}",
-            play.time_end, players1, players2, winner
+            "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
+            play.time_end,
+            players1,
+            players2,
+            winner,
+            games.iter().map(|g| g.to_string()).collect::<Vec<String>>()
         );
 
-        let team1 = players1.into_iter().map(|p| Player {
-            id: 0,
-            first_name: p,
-            last_name: String::new(),
-        }).collect::<Vec<Player>>();
+        let team1 = players1
+            .into_iter()
+            .map(|p| Player {
+                id: 0,
+                first_name: p,
+                last_name: String::new(),
+            })
+            .collect::<Vec<Player>>();
 
-        let team2 = players2.into_iter().map(|p| Player {
-            id: 0,
-            first_name: p,
-            last_name: String::new(),
-        }).collect::<Vec<Player>>();
+        let team2 = players2
+            .into_iter()
+            .map(|p| Player {
+                id: 0,
+                first_name: p,
+                last_name: String::new(),
+            })
+            .collect::<Vec<Player>>();
 
-        database.create_match_and_players(r#match, team1, team2).await?;
+        let r#match = database
+            .create_match_and_players(r#match, team1, team2)
+            .await?;
 
+        for g in games.iter_mut() {
+            g.match_id = r#match.id;
+        }
+
+        all_games.append(&mut games);
     }
+
+    database.create_games(all_games).await?;
 
     Ok(())
 }
