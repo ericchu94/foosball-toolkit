@@ -1,4 +1,5 @@
-use time::macros::format_description;
+use js_sys::Date;
+use time::{macros::format_description, UtcOffset};
 use yew::prelude::*;
 
 use super::PlayerNameComponent;
@@ -7,6 +8,13 @@ use crate::models::*;
 #[derive(Properties, PartialEq)]
 pub struct MatchProps {
     pub match_data: MatchData,
+}
+
+fn get_local_offset() -> UtcOffset {
+    let date = Date::new_0();
+    let offset = date.get_timezone_offset();
+
+    UtcOffset::from_whole_seconds((-offset * 60.0) as i32).unwrap()
 }
 
 #[function_component]
@@ -33,7 +41,7 @@ pub fn MatchComponent(props: &MatchProps) -> Html {
                         <small>{&match_data.tournament_name}</small>
                     </div>
                     <div class="position-absolute end-0 me-2">
-                        <small>{match_data.timestamp.format(format).unwrap()}</small>
+                        <small>{match_data.timestamp.to_offset(get_local_offset()).format(format).unwrap()}</small>
                     </div>
                 </div>
                 <div class="row">

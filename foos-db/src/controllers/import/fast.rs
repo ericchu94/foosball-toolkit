@@ -6,6 +6,7 @@ use std::{
 use actix_web::web::Data;
 use fast::TeamMatch;
 use futures::{stream, StreamExt};
+use time::format_description::well_known::Rfc3339;
 use time_tz::PrimitiveDateTimeExt;
 use zip::ZipArchive;
 
@@ -110,6 +111,7 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
                     Ordering::Less => (acc.0, acc.1 + 2),
                     Ordering::Equal => (acc.0 + 1, acc.1 + 1),
                 });
+
         match a.cmp(&b) {
             Ordering::Greater => Winner::Team1,
             Ordering::Less => Winner::Team2,
@@ -125,6 +127,7 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             .map(|g| {
                 let score1 = g.score_team1 as i32;
                 let score2 = g.score_team2 as i32;
+
                 Game {
                     score1,
                     score2,
@@ -169,6 +172,44 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             timestamp: tm.schedule_end.assume_timezone(tz).unwrap(),
             winner,
         };
+
+        // Draw disallowed for 0-0 and BoX
+        let skip = winner == Winner::Draw
+            && (games[0].score1 == 0 && games[0].score2 == 0 || games.len() > 1);
+
+        if skip {
+            println!(
+                "Skipped TeamMatch: {}: {:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
+                tm.id,
+                r#match.timestamp.format(&Rfc3339).unwrap(),
+                players1
+                    .iter()
+                    .map(|p| &p.first_name)
+                    .collect::<Vec<&String>>(),
+                players2
+                    .iter()
+                    .map(|p| &p.first_name)
+                    .collect::<Vec<&String>>(),
+                winner,
+                games.iter().map(|g| g.to_string()).collect::<Vec<String>>()
+            );
+            continue;
+        }
+
+        println!(
+            "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
+            r#match.timestamp.format(&Rfc3339).unwrap(),
+            players1
+                .iter()
+                .map(|p| &p.first_name)
+                .collect::<Vec<&String>>(),
+            players2
+                .iter()
+                .map(|p| &p.first_name)
+                .collect::<Vec<&String>>(),
+            winner,
+            games.iter().map(|g| g.to_string()).collect::<Vec<String>>()
+        );
 
         let r#match = database
             .create_match_and_players(r#match, players1, players2)
