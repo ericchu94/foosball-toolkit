@@ -1106,12 +1106,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "elo"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3238913bb9bde64d487f86d70b6d2e04c9bdba60aa4b44fdddf1c9765e2b5b77"
-
-[[package]]
 name = "encoding_rs"
 version = "0.8.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1227,7 +1221,6 @@ dependencies = [
  "actix-cors",
  "actix-multipart",
  "actix-web",
- "elo",
  "env_logger",
  "fast",
  "futures",

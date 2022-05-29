@@ -198,6 +198,18 @@ impl Database {
         Ok(())
     }
 
+    pub async fn get_games_by_match_ids(&self, match_ids: &[i32]) -> Result<Vec<Game>> {
+        let games = query_as!(
+            Game,
+            "SELECT * FROM game WHERE match_id = ANY($1) ORDER BY id",
+            match_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(games)
+    }
+
     pub async fn create_player_match(&self, player_match: PlayerMatch) -> Result<()> {
         query!(
             "INSERT INTO player_match (player_id, match_id, team) VALUES ($1, $2, $3)",

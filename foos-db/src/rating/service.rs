@@ -87,28 +87,26 @@ impl RatingService {
         latest_ratings: &mut HashMap<i32, i32>,
         player_matches: &[PlayerMatch],
         m: Match,
+        games: &[Game],
     ) -> Result<Vec<Rating>> {
         let (team1_ratings, team2_ratings) = self
             .get_player_ratings_for_match(latest_ratings, player_matches)
             .await?;
 
-        let before1 =
-            team1_ratings.iter().map(|pair| pair.1).sum::<i32>() / team1_ratings.len() as i32;
-        let before2 =
-            team2_ratings.iter().map(|pair| pair.1).sum::<i32>() / team2_ratings.len() as i32;
+        let before1 = team1_ratings.iter().map(|pair| pair.1).sum::<i32>() as f64
+            / team1_ratings.len() as f64;
+        let before2 = team2_ratings.iter().map(|pair| pair.1).sum::<i32>() as f64
+            / team2_ratings.len() as f64;
 
-        let (after1, after2) = self.calculator.calculate(before1, before2, m.winner);
-
-        let delta1 = after1 - before1;
-        let delta2 = after2 - before2;
+        let delta = self.calculator.calculate_match(before1, before2, games).round() as i32;
 
         let ratings = team1_ratings
             .into_iter()
-            .map(|p| Self::create_rating(p.0, p.1, delta1, m.id))
+            .map(|p| Self::create_rating(p.0, p.1, delta, m.id))
             .chain(
                 team2_ratings
                     .into_iter()
-                    .map(|p| Self::create_rating(p.0, p.1, delta2, m.id)),
+                    .map(|p| Self::create_rating(p.0, p.1, -delta, m.id)),
             )
             .collect::<Vec<Rating>>();
 
@@ -154,14 +152,25 @@ impl RatingService {
                 acc
             });
 
+        let games = self
+            .database
+            .get_games_by_match_ids(&match_ids)
+            .await?
+            .into_iter()
+            .fold(HashMap::new(), |mut acc, g| {
+                acc.entry(g.match_id).or_insert(vec![]).push(g);
+                acc
+            });
+
         let mut ratings = vec![];
 
         for m in matches {
             let player_matches = &player_matches[&m.id];
+            let games = &games[&m.id];
 
             ratings.append(
                 &mut self
-                    .compute_ratings_for_match(&mut latest_ratings, player_matches, m)
+                    .compute_ratings_for_match(&mut latest_ratings, player_matches, m, games)
                     .await?,
             );
         }

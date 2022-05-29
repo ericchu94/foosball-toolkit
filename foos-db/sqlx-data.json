@@ -243,50 +243,6 @@
     },
     "query": "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC LIMIT 1"
   },
-  "250cea2644137f696124b0c8ddd64284c1b6cbe136103da464a260ecbb71f3e3": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "player_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "match_id",
-          "ordinal": 2,
-          "type_info": "Int4"
-        },
-        {
-          "name": "before_rating",
-          "ordinal": 3,
-          "type_info": "Int4"
-        },
-        {
-          "name": "after_rating",
-          "ordinal": 4,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        true,
-        true,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Int4Array"
-        ]
-      }
-    },
-    "query": "SELECT r.* FROM rating r\n        JOIN (\n            SELECT MAX(id) id, player_id FROM rating r\n            WHERE player_id = ANY($1)\n            GROUP BY player_id\n        ) sub ON r.id = sub.id AND r.player_id = sub.player_id"
-  },
   "25206cca3430f7978c6f6ded03de8c223a0664e0fe18671dafabde356901d295": {
     "describe": {
       "columns": [
@@ -592,6 +548,48 @@
     },
     "query": "SELECT rating.* FROM rating JOIN match ON match_id = match.id WHERE player_id = $1 ORDER BY timestamp DESC LIMIT 1"
   },
+  "85867a56b1c88b0d272005f5bda49773564b9307dd7174cb0752f2df88eeb888": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "team",
+          "ordinal": 2,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "team1",
+                  "team2"
+                ]
+              },
+              "name": "team"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4Array"
+        ]
+      }
+    },
+    "query": "SELECT * FROM player_match WHERE match_id = ANY($1)"
+  },
   "8bda24c1160f9129f4a4c22303b5012180b2b8ebb23bc596007d8531469673b7": {
     "describe": {
       "columns": [
@@ -768,6 +766,48 @@
     },
     "query": "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r\n            JOIN (\n                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p\n                JOIN rating r ON r.player_id = p.id\n                GROUP BY r.player_id, p.first_name, p.last_name\n            ) s ON s.rating_id = r.id AND s.player_id = r.player_id\n            ORDER BY rating DESC\n            LIMIT $1 OFFSET $2"
   },
+  "b7172db25d321f8b50901de61e05386a70d0c60936b85f10990921760003e892": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "player_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "before_rating",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "after_rating",
+          "ordinal": 4,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT r.* FROM rating r\n        JOIN (\n            SELECT MAX(id) id, player_id FROM rating r\n            GROUP BY player_id\n        ) sub ON r.id = sub.id AND r.player_id = sub.player_id"
+  },
   "b7266cf0b1f18caa7b7a349d5aa4f3618aa1c7bf58b5ec89156dbbe6fd81cc03": {
     "describe": {
       "columns": [],
@@ -777,6 +817,44 @@
       }
     },
     "query": "DELETE FROM rating"
+  },
+  "b7782fa9a790af3531c0154f8af50f25b2054db0ec9b6e1913f486429e9ed649": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "match_id",
+          "ordinal": 1,
+          "type_info": "Int4"
+        },
+        {
+          "name": "score1",
+          "ordinal": 2,
+          "type_info": "Int4"
+        },
+        {
+          "name": "score2",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4Array"
+        ]
+      }
+    },
+    "query": "SELECT * FROM game WHERE match_id = ANY($1) ORDER BY id"
   },
   "bdbbc18ab6fb478b4fdf16065953ae1307d0e1e3051d2e537dcfdf5494f451cb": {
     "describe": {
