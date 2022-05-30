@@ -566,7 +566,7 @@ impl Database {
                 JOIN rating r ON r.player_id = p.id
                 GROUP BY r.player_id, p.first_name, p.last_name
             ) s ON s.rating_id = r.id AND s.player_id = r.player_id
-            ORDER BY rating DESC
+            ORDER BY rating DESC, player_id
             LIMIT $1 OFFSET $2",
             limit as i64,
             offset as i64

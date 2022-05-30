@@ -844,45 +844,6 @@
     },
     "query": "DELETE FROM player WHERE id = $1"
   },
-  "b5261faa011ef3577519678a8f336386819e128578cbf906b302142d4aaa6192": {
-    "describe": {
-      "columns": [
-        {
-          "name": "player_id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "first_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "last_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "rating",
-          "ordinal": 3,
-          "type_info": "Int4"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r\n            JOIN (\n                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p\n                JOIN rating r ON r.player_id = p.id\n                GROUP BY r.player_id, p.first_name, p.last_name\n            ) s ON s.rating_id = r.id AND s.player_id = r.player_id\n            ORDER BY rating DESC\n            LIMIT $1 OFFSET $2"
-  },
   "b7172db25d321f8b50901de61e05386a70d0c60936b85f10990921760003e892": {
     "describe": {
       "columns": [
@@ -1087,6 +1048,45 @@
       }
     },
     "query": "INSERT INTO match (tournament_id, timestamp, winner) VALUES ($1, $2, $3) RETURNING *"
+  },
+  "c7014b7ea4c1da4d5a24af1341d82b0798e8dd0f2bf18d11b3cbab54e4939be7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "player_id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "rating",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r\n            JOIN (\n                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p\n                JOIN rating r ON r.player_id = p.id\n                GROUP BY r.player_id, p.first_name, p.last_name\n            ) s ON s.rating_id = r.id AND s.player_id = r.player_id\n            ORDER BY rating DESC, player_id\n            LIMIT $1 OFFSET $2"
   },
   "e83f080cadc59f0b2dd832fb086b73f31f95009cfae367653790ed5fa7604ded": {
     "describe": {
