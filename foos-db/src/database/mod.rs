@@ -3,7 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use sqlx::{query, query_as, query_as_unchecked, PgPool};
+use sqlx::{query, query_as, query_as_unchecked, query_unchecked, PgPool};
 use thiserror::Error;
 use time::OffsetDateTime;
 
@@ -200,6 +200,30 @@ impl Database {
         .await?)
     }
 
+    pub async fn create_matches(&self, matches: &[Match]) -> Result<Vec<Match>> {
+        let tournament_ids = matches
+            .iter()
+            .map(|m| m.tournament_id.unwrap())
+            .collect::<Vec<i32>>();
+        let timestamps = matches
+            .iter()
+            .map(|m| m.timestamp)
+            .collect::<Vec<OffsetDateTime>>();
+        let winners = matches
+            .iter()
+            .map(|m| format!("{:?}", m.winner).to_lowercase())
+            .collect::<Vec<String>>();
+        Ok(query_as_unchecked!(
+            Match,
+            "INSERT INTO match (tournament_id, timestamp, winner) SELECT * FROM UNNEST($1::int[], $2::timestamptz[], $3::winner[]) RETURNING *",
+            tournament_ids,
+            timestamps,
+            winners,
+        )
+        .fetch_all(&self.pool)
+        .await?)
+    }
+
     pub async fn create_match_and_players(
         &self,
         r#match: Match,
@@ -220,35 +244,6 @@ impl Database {
 
         for player in team2 {
             let player = self.get_or_create_player(player).await?;
-            let player_match = PlayerMatch {
-                player_id: player.id,
-                match_id: r#match.id,
-                team: Team::Team2,
-            };
-            self.create_player_match(player_match).await?;
-        }
-
-        Ok(r#match)
-    }
-
-    pub async fn create_match_and_player_matches(
-        &self,
-        r#match: Match,
-        team1: Vec<&Player>,
-        team2: Vec<&Player>,
-    ) -> Result<Match> {
-        let r#match = self.create_match(r#match).await?;
-
-        for player in team1 {
-            let player_match = PlayerMatch {
-                player_id: player.id,
-                match_id: r#match.id,
-                team: Team::Team1,
-            };
-            self.create_player_match(player_match).await?;
-        }
-
-        for player in team2 {
             let player_match = PlayerMatch {
                 player_id: player.id,
                 match_id: r#match.id,
@@ -295,6 +290,29 @@ impl Database {
             player_match.player_id,
             player_match.match_id,
             player_match.team as Team
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn create_player_matches(&self, player_matches: &[PlayerMatch]) -> Result<()> {
+        let player_ids = player_matches
+            .iter()
+            .map(|pm| pm.player_id)
+            .collect::<Vec<i32>>();
+        let match_ids = player_matches
+            .iter()
+            .map(|pm| pm.match_id)
+            .collect::<Vec<i32>>();
+        let teams = player_matches
+            .iter()
+            .map(|pm| format!("{:?}", pm.team).to_lowercase())
+            .collect::<Vec<String>>();
+        query_unchecked!(
+            "INSERT INTO player_match (player_id, match_id, team) SELECT * FROM UNNEST($1::int[], $2::int[], $3::team[])",
+            player_ids, match_ids, teams
         )
         .execute(&self.pool)
         .await?;
