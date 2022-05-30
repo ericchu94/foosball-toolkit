@@ -1,4 +1,7 @@
-use std::{cmp::Reverse, collections::HashMap};
+use std::{
+    cmp::Reverse,
+    collections::{HashMap, HashSet},
+};
 
 use sqlx::{query, query_as, query_as_unchecked, PgPool};
 use thiserror::Error;
@@ -44,6 +47,53 @@ impl Database {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn create_players(&self, players: &[Player]) -> Result<()> {
+        let first_names = players
+            .iter()
+            .map(|p| p.first_name.clone())
+            .collect::<Vec<String>>();
+        let last_names = players
+            .iter()
+            .map(|p| p.last_name.clone())
+            .collect::<Vec<String>>();
+        query!(
+            "INSERT INTO player (first_name, last_name) SELECT * FROM UNNEST($1::text[], $2::text[]) ON CONFLICT DO NOTHING",
+            &first_names,
+            &last_names        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_players_by_names(
+        &self,
+        names: HashSet<(&str, &str)>,
+    ) -> Result<HashMap<(String, String), Player>> {
+        let first_names = names
+            .iter()
+            .map(|n| n.0.to_owned())
+            .collect::<Vec<String>>();
+        let last_names = names
+            .iter()
+            .map(|n| n.1.to_owned())
+            .collect::<Vec<String>>();
+        let players = query_as!(
+            Player,
+            "SELECT * FROM player WHERE first_name = ANY($1) AND last_name = ANY($2)",
+            &first_names,
+            &last_names
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(players
+            .into_iter()
+            .filter(|p| names.contains(&(&p.first_name, &p.last_name)))
+            .map(|p| ((p.first_name.clone(), p.last_name.clone()), p))
+            .collect())
     }
 
     pub async fn get_or_create_player(&self, player: Player) -> Result<Player> {
@@ -181,6 +231,35 @@ impl Database {
         Ok(r#match)
     }
 
+    pub async fn create_match_and_player_matches(
+        &self,
+        r#match: Match,
+        team1: Vec<&Player>,
+        team2: Vec<&Player>,
+    ) -> Result<Match> {
+        let r#match = self.create_match(r#match).await?;
+
+        for player in team1 {
+            let player_match = PlayerMatch {
+                player_id: player.id,
+                match_id: r#match.id,
+                team: Team::Team1,
+            };
+            self.create_player_match(player_match).await?;
+        }
+
+        for player in team2 {
+            let player_match = PlayerMatch {
+                player_id: player.id,
+                match_id: r#match.id,
+                team: Team::Team2,
+            };
+            self.create_player_match(player_match).await?;
+        }
+
+        Ok(r#match)
+    }
+
     pub async fn create_games(&self, games: Vec<Game>) -> Result<()> {
         let match_ids = games.iter().map(|g| g.match_id).collect::<Vec<i32>>();
         let score1s = games.iter().map(|g| g.score1).collect::<Vec<i32>>();
@@ -249,13 +328,16 @@ impl Database {
         Ok(())
     }
 
-    pub async fn get_fast_player_by_license(&self, license: &str) -> Result<FastPlayer> {
+    pub async fn get_fast_players_by_licenses(
+        &self,
+        licenses: &[String],
+    ) -> Result<Vec<FastPlayer>> {
         Ok(query_as!(
             FastPlayer,
-            "SELECT * FROM fast_player WHERE license = $1",
-            license,
+            "SELECT * FROM fast_player WHERE license = ANY($1)",
+            licenses,
         )
-        .fetch_one(&self.pool)
+        .fetch_all(&self.pool)
         .await?)
     }
 

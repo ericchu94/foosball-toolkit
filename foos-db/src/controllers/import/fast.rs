@@ -1,12 +1,12 @@
 use std::{
     cmp::Ordering,
+    collections::{HashMap, HashSet},
     io::{BufReader, Cursor, Read, Seek},
 };
 
 use actix_web::web::Data;
 use fast::TeamMatch;
-use futures::{stream, StreamExt};
-use log::{warn, debug};
+use log::{debug, warn};
 use time::format_description::well_known::Rfc3339;
 use time_tz::PrimitiveDateTimeExt;
 use zip::ZipArchive;
@@ -18,13 +18,8 @@ use super::{
     ImportResult,
 };
 
-async fn get_player_from_player_id(
-    database: Data<Database>,
-    f: &fast::Fast,
-    id: u32,
-) -> ImportResult<Player> {
-    let player = f
-        .registered_players
+fn get_standard_player_by_player_id(f: &fast::Fast, id: u32) -> Option<Player> {
+    f.registered_players
         .iter()
         .flat_map(|rp| rp.player_infos.iter())
         .flat_map(|pi| &pi.player)
@@ -34,35 +29,84 @@ async fn get_player_from_player_id(
                 .flat_map(|tlp| tlp.itsf_member.iter())
                 .map(|im| &im.federation_member.player),
         )
-        .find(|p| p.id == id);
-
-    if let Some(player) = player {
-        Ok(Player {
+        .find(|p| p.id == id)
+        .map(|p| Player {
             id: 0,
-            first_name: player.person.first_name.clone(),
-            last_name: player.person.last_name.clone(),
+            first_name: p.person.first_name.clone(),
+            last_name: p.person.last_name.clone(),
         })
-    } else {
-        let pi_with_license = f
-            .registered_players
-            .iter()
-            .flat_map(|rp| rp.player_infos.iter())
-            .filter(|pi| pi.player_id.is_some() && pi.no_license.is_some())
-            .find(|pi| pi.player_id.unwrap() == id);
+}
 
-        if let Some(pi) = pi_with_license {
-            let fast_player = database
-                .get_fast_player_by_license(pi.no_license.as_ref().unwrap())
-                .await?;
-            Ok(Player {
-                id: 0,
-                first_name: fast_player.first_name,
-                last_name: fast_player.last_name,
-            })
-        } else {
-            Err(MissingPlayer(id))
-        }
+async fn get_players_by_licenses(
+    database: Data<Database>,
+    licenses: &[String],
+) -> ImportResult<HashMap<String, Player>> {
+    Ok(database
+        .get_fast_players_by_licenses(licenses)
+        .await?
+        .into_iter()
+        .map(|fp| {
+            (
+                fp.license,
+                Player {
+                    first_name: fp.first_name,
+                    last_name: fp.last_name,
+                    ..Default::default()
+                },
+            )
+        })
+        .collect())
+}
+
+fn get_license_by_player_id(f: &fast::Fast, id: u32) -> Option<String> {
+    f.registered_players
+        .iter()
+        .flat_map(|rp| rp.player_infos.iter())
+        .filter(|pi| pi.player_id.is_some() && pi.no_license.is_some())
+        .find(|pi| pi.player_id.unwrap() == id)
+        .and_then(|pi| pi.no_license.clone())
+}
+
+async fn get_players_by_player_ids(
+    database: Data<Database>,
+    f: &fast::Fast,
+    ids: &[u32],
+) -> ImportResult<HashMap<u32, Player>> {
+    let (mut players, missing_ids) = ids
+        .iter()
+        .map(|&id| (id, get_standard_player_by_player_id(f, id)))
+        .fold((HashMap::new(), vec![]), |(mut m, mut v), (id, o)| {
+            match o {
+                Some(p) => {
+                    m.insert(id, p);
+                }
+                None => v.push(id),
+            }
+            (m, v)
+        });
+
+    let map = missing_ids
+        .into_iter()
+        .map(|id| {
+            get_license_by_player_id(f, id)
+                .map(|license| (id, license))
+                .ok_or(MissingPlayer(id))
+        })
+        .collect::<ImportResult<HashMap<u32, String>>>()?;
+
+    let licenses = map.values().cloned().collect::<Vec<String>>();
+
+    let mut licensed_players = get_players_by_licenses(database, &licenses).await?;
+
+    for r in map.into_iter().map(|(id, license)| {
+        let player = licensed_players.remove(&license).ok_or(MissingPlayer(id))?;
+        ImportResult::Ok((id, player))
+    }) {
+        let (id, player) = r?;
+        players.insert(id, player);
     }
+
+    Ok(players)
 }
 
 pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResult<()> {
@@ -140,27 +184,49 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
 
     let mut all_games = vec![];
 
+    let player_ids = team_matches
+        .iter()
+        .flat_map(|tm| {
+            let t1 = *tm.team1_id.as_ref().unwrap();
+            let t2 = *tm.team2_id.as_ref().unwrap();
+            let players1 = get_players_from_team(t1);
+            let players2 = get_players_from_team(t2);
+            players1.into_iter().chain(players2.into_iter())
+        })
+        .collect::<Vec<u32>>();
+
+    let players = get_players_by_player_ids(database.clone(), &f, &player_ids).await?;
+    database
+        .create_players(&players.values().cloned().collect::<Vec<Player>>())
+        .await?;
+    let names = players
+        .values()
+        .map(|p| (p.first_name.as_str(), p.last_name.as_str()))
+        .collect::<HashSet<(&str, &str)>>();
+    let mut db_players = database.get_players_by_names(names).await?;
+    let players = players
+        .into_iter()
+        .map(|(id, p)| {
+            let p = db_players
+                .remove(&(p.first_name, p.last_name))
+                .ok_or(MissingPlayer(id))?;
+            ImportResult::Ok((id, p))
+        })
+        .collect::<ImportResult<HashMap<u32, Player>>>()?;
+
     for tm in team_matches {
-        let f = &f;
-        let d = database.clone();
         let t1 = *tm.team1_id.as_ref().unwrap();
         let t2 = *tm.team2_id.as_ref().unwrap();
         let players1 = get_players_from_team(t1);
-        let players1 = stream::iter(players1.into_iter())
-            .then(|id| {
-                let database = d.clone();
-                async move { get_player_from_player_id(database, f, id).await.unwrap() }
-            })
-            .collect::<Vec<Player>>()
-            .await;
+        let players1 = players1
+            .into_iter()
+            .map(|id| &players[&id])
+            .collect::<Vec<&Player>>();
         let players2 = get_players_from_team(t2);
-        let players2 = stream::iter(players2.into_iter())
-            .then(|id| {
-                let database = d.clone();
-                async move { get_player_from_player_id(database, f, id).await.unwrap() }
-            })
-            .collect::<Vec<Player>>()
-            .await;
+        let players2 = players2
+            .into_iter()
+            .map(|id| &players[&id])
+            .collect::<Vec<&Player>>();
         let winner = get_winner(tm);
 
         let mut games = get_games(tm);
@@ -213,7 +279,7 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
         );
 
         let r#match = database
-            .create_match_and_players(r#match, players1, players2)
+            .create_match_and_player_matches(r#match, players1, players2)
             .await?;
 
         for g in games.iter_mut() {
