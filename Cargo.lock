@@ -1225,6 +1225,7 @@ dependencies = [
  "fast",
  "futures",
  "ktool",
+ "log 0.4.17",
  "quick-xml",
  "serde",
  "serde_json",

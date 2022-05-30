@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::time::Instant;
 
+use log::info;
 use thiserror::Error;
 use time::OffsetDateTime;
 
@@ -181,7 +182,7 @@ impl RatingService {
 
         let end = Instant::now();
 
-        println!(
+        info!(
             "{} ratings computed in {} milliseconds",
             len,
             (end - start).as_millis()

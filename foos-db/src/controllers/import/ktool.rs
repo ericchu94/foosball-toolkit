@@ -2,6 +2,7 @@ use std::iter;
 
 use actix_web::web::Data;
 use actix_web::Result;
+use log::info;
 use time::OffsetDateTime;
 
 use crate::{database::Database, models::*};
@@ -87,7 +88,7 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
 
         let mut games = get_games(play);
 
-        println!(
+        info!(
             "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
             play.time_end,
             players1,

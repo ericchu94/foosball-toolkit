@@ -6,6 +6,7 @@ use std::{
 use actix_web::web::Data;
 use fast::TeamMatch;
 use futures::{stream, StreamExt};
+use log::{warn, info};
 use time::format_description::well_known::Rfc3339;
 use time_tz::PrimitiveDateTimeExt;
 use zip::ZipArchive;
@@ -178,7 +179,7 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             && (games[0].score1 == 0 && games[0].score2 == 0 || games.len() > 1);
 
         if skip {
-            println!(
+            warn!(
                 "Skipped TeamMatch: {}: {:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
                 tm.id,
                 r#match.timestamp.format(&Rfc3339).unwrap(),
@@ -196,7 +197,7 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
             continue;
         }
 
-        println!(
+        info!(
             "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
             r#match.timestamp.format(&Rfc3339).unwrap(),
             players1

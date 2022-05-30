@@ -10,6 +10,7 @@ use actix_web::{
     HttpResponse, Responder, ResponseError, Result,
 };
 use futures::{future, stream, StreamExt, TryStreamExt};
+use log::info;
 use zip::result::ZipError;
 
 use crate::{
@@ -101,7 +102,7 @@ async fn import_fast_init_impl(
 
     let end = Instant::now();
 
-    println!("fast-init import took {} milliseconds", (end - start).as_millis());
+    info!("fast-init import took {} milliseconds", (end - start).as_millis());
     Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 

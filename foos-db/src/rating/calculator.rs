@@ -1,5 +1,7 @@
 use std::cmp::Ordering;
 
+use log::debug;
+
 use crate::models::Game;
 
 const K_GAME: f64 = 12f64;
@@ -11,13 +13,13 @@ pub trait RatingCalculator {
     fn calculate(&self, rating1: f64, rating2: f64, score: f64, k: f64) -> f64;
 
     fn calculate_match(&self, rating1: f64, rating2: f64, games: &[Game]) -> f64 {
-        println!("rating {} {}", rating1, rating2);
+        debug!("rating {} {}", rating1, rating2);
         let delta_games: f64 = games
             .iter()
             .map(|g| {
                 let score = g.score1 as f64 / (g.score1 + g.score2) as f64;
                 let d = self.calculate(rating1, rating2, score, K_GAME);
-                println!("game {}-{} awarded {}", g.score1, g.score2, d);
+                debug!("game {}-{} awarded {}", g.score1, g.score2, d);
                 d
             })
             .sum();
@@ -42,7 +44,7 @@ pub trait RatingCalculator {
         };
 
         let delta_match = self.calculate(rating1, rating2, normalize(a, b), k);
-        println!("match {}-{} awarded {}", a, b, delta_match);
+        debug!("match {}-{} awarded {}", a, b, delta_match);
 
         delta_games + delta_match
     }
