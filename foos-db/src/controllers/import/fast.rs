@@ -7,8 +7,8 @@ use std::{
 use actix_web::web::Data;
 use fast::TeamMatch;
 use log::{debug, warn};
-use time::format_description::well_known::Rfc3339;
-use time_tz::PrimitiveDateTimeExt;
+use time::{format_description::well_known::Rfc3339, PrimitiveDateTime};
+use time_tz::{PrimitiveDateTimeExt, Tz};
 use zip::ZipArchive;
 
 use crate::{database::Database, models::*};
@@ -17,6 +17,17 @@ use super::{
     ImportError::{MissingField, MissingPlayer},
     ImportResult,
 };
+
+fn get_timezone(timezone: &str) -> &'static Tz {
+    if let Some(tz) = time_tz::timezones::get_by_name(timezone) {
+        tz
+    } else if timezone == "CTT" {
+        time_tz::timezones::db::asia::SHANGHAI
+    } else {
+        warn!("Cannot find timezone for {}, assuming UTC", timezone);
+        time_tz::timezones::db::UTC
+    }
+}
 
 fn get_standard_player_by_player_id(f: &fast::Fast, id: u32) -> Option<Player> {
     f.registered_players
@@ -87,24 +98,20 @@ async fn get_players_by_player_ids(
 
     let map = missing_ids
         .into_iter()
-        .map(|id| {
-            get_license_by_player_id(f, id)
-                .map(|license| (id, license))
-                .ok_or(MissingPlayer(id))
+        .filter_map(|id| {
+            let license = get_license_by_player_id(f, id)?;
+            Some((id, license))
         })
-        .collect::<ImportResult<HashMap<u32, String>>>()?;
+        .collect::<HashMap<u32, String>>();
 
     let licenses = map.values().cloned().collect::<Vec<String>>();
 
     let mut licensed_players = get_players_by_licenses(database, &licenses).await?;
 
-    for r in map.into_iter().map(|(id, license)| {
-        let player = licensed_players.remove(&license).ok_or(MissingPlayer(id))?;
-        ImportResult::Ok((id, player))
-    }) {
-        let (id, player) = r?;
-        players.insert(id, player);
-    }
+    players.extend(map.into_iter().filter_map(|(id, license)| {
+        let player = licensed_players.remove(&license)?;
+        Some((id, player))
+    }));
 
     Ok(players)
 }
@@ -133,18 +140,19 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
     team_matches.sort_by_key(|tm| tm.schedule_end);
 
     let get_players_from_team = |id: u32| {
-        let team = &t
+        let team = t
             .competition
             .iter()
             .flat_map(|c| c.competition_team.iter())
             .find(|ct| ct.id == id)
             .unwrap()
-            .team;
+            .team
+            .as_ref()?;
 
         let mut v = vec![team.player1_id];
         v.extend(team.player2_id.iter());
 
-        v
+        Some(v)
     };
 
     let get_winner = |tm: &TeamMatch| {
@@ -187,10 +195,11 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
         .flat_map(|tm| {
             let t1 = *tm.team1_id.as_ref().unwrap();
             let t2 = *tm.team2_id.as_ref().unwrap();
-            let players1 = get_players_from_team(t1);
-            let players2 = get_players_from_team(t2);
-            players1.into_iter().chain(players2.into_iter())
+            let players1 = get_players_from_team(t1)?;
+            let players2 = get_players_from_team(t2)?;
+            Some(players1.into_iter().chain(players2.into_iter()))
         })
+        .flatten()
         .collect::<Vec<u32>>();
 
     let players = get_players_by_player_ids(database.clone(), &f, &player_ids).await?;
@@ -217,26 +226,26 @@ pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResul
         .filter_map(|tm| {
             let t1 = *tm.team1_id.as_ref().unwrap();
             let t2 = *tm.team2_id.as_ref().unwrap();
-            let players1 = get_players_from_team(t1);
+            let players1 = get_players_from_team(t1)?;
             let players1 = players1
                 .into_iter()
-                .map(|id| &players[&id])
-                .collect::<Vec<&Player>>();
-            let players2 = get_players_from_team(t2);
+                .map(|id| players.get(&id))
+                .collect::<Option<Vec<&Player>>>()?;
+            let players2 = get_players_from_team(t2)?;
             let players2 = players2
                 .into_iter()
-                .map(|id| &players[&id])
-                .collect::<Vec<&Player>>();
+                .map(|id| players.get(&id))
+                .collect::<Option<Vec<&Player>>>()?;
             let winner = get_winner(tm);
 
             let games = get_games(tm);
 
-            let tz = time_tz::timezones::get_by_name(&t.time_zone).unwrap();
+            let tz = get_timezone(&t.time_zone);
 
             let r#match = Match {
                 id: 0,
                 tournament_id: Some(tournament.id),
-                timestamp: tm.schedule_end.assume_timezone(tz).unwrap(),
+                timestamp: tm.schedule_end.unwrap_or(PrimitiveDateTime::MAX).assume_timezone(tz).unwrap(),
                 winner,
             };
 

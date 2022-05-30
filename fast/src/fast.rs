@@ -127,6 +127,7 @@ pub struct Person {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TemporaryLicensePeople {
+    #[serde(default)]
     pub itsf_member: Vec<ItsfMember>,
 }
 
@@ -358,6 +359,7 @@ pub struct Competition {
     pub competition_pricing: CompetitionPricing,
     #[serde(default)]
     pub phase: Vec<Phase>,
+    #[serde(default)]
     pub competition_team: Vec<CompetitionTeam>,
     pub packages: Option<Packages>,
 }
@@ -375,7 +377,8 @@ pub struct CompetitionPricing;
 pub struct CompetitionTeam {
     #[serde(rename = "$unflatten=id")]
     pub id: u32,
-    pub team: Team,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub team: Option<Team>,
     #[serde(rename = "$unflatten=noTeam")]
     pub no_team: u32,
     #[serde(rename = "$unflatten=isMaster")]
@@ -400,7 +403,8 @@ pub struct CompetitionTeam {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub player2_payment_mode: Option<String>,
     #[serde(rename = "$unflatten=player1Series")]
-    pub player1_series: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub player1_series: Option<u32>,
     #[serde(rename = "$unflatten=player2Series")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub player2_series: Option<u32>,
@@ -536,6 +540,7 @@ pub struct Phase {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PhaseRanking {
+    #[serde(default)]
     pub ranking: Vec<Ranking>,
 }
 
@@ -560,7 +565,7 @@ pub struct DefinitivePhaseOpponentRanking {
     pub qualified: bool,
     #[serde(rename = "$unflatten=bestPlaceRank")]
     pub best_place_rank: u32,
-    pub points: Points,
+    pub points: Vec<Points>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -593,8 +598,10 @@ pub struct TeamMatch {
     #[serde(with = "crate::serde::fast_date_time")]
     pub effective_start: PrimitiveDateTime,
     #[serde(rename = "$unflatten=scheduleEnd")]
-    #[serde(with = "crate::serde::fast_date_time")]
-    pub schedule_end: PrimitiveDateTime,
+    #[serde(default)]
+    #[serde(with = "crate::serde::option_fast_date_time")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub schedule_end: Option<PrimitiveDateTime>,
     #[serde(rename = "$unflatten=matchDepth")]
     pub match_depth: i32,
     #[serde(rename = "$unflatten=nodeRank")]
@@ -610,9 +617,9 @@ pub struct TeamMatch {
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     #[serde(rename = "$unflatten=scoreTeam1")]
-    pub score_team1: u32,
+    pub score_team1: i32,
     #[serde(rename = "$unflatten=scoreTeam2")]
-    pub score_team2: u32,
+    pub score_team2: i32,
     #[serde(rename = "$unflatten=gameNumber")]
     pub game_number: u32,
     #[serde(rename = "$unflatten=elementNumber")]
@@ -654,7 +661,8 @@ pub struct PublicDisplay {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Uids {
-    pub uid_federation: UidFederation,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uid_federation: Option<UidFederation>,
     pub uid_licenses: UidLicenses,
 }
 
@@ -676,6 +684,7 @@ pub struct League {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UidLicenses {
+    #[serde(default)]
     pub country: Vec<UidLicensesCountry>,
 }
 
