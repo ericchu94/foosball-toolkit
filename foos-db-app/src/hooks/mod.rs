@@ -16,4 +16,4 @@ pub use use_match_datas::*;
 pub use use_player_datas::*;
 pub use use_players::*;
 
-pub const BASE_URL: &str = "https://foos-db.herokuapp.com";
+pub const BASE_URL: &str = option_env!("BASE_URL").unwrap_or("https://foos-db.herokuapp.com");
