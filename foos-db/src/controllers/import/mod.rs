@@ -54,15 +54,29 @@ async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Resu
 }
 
 async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
+    let start = Instant::now();
     let file = file_payload(payload).await?;
-
-    let fast = fast::parse(&mut file.as_slice())?;
+    let end = Instant::now();
+    info!(
+        "fast buffer took {} milliseconds",
+        (end - start).as_millis()
+    );
 
     let start = Instant::now();
-
-    fast::import_fast(database, fast).await?;
-
+    let fast = fast::parse(&mut file.as_slice())?;
     let end = Instant::now();
+    info!(
+        "fast parsing took {} milliseconds",
+        (end - start).as_millis()
+    );
+
+    let start = Instant::now();
+    fast::import_fast(database, fast).await?;
+    let end = Instant::now();
+    info!(
+        "fast import took {} milliseconds",
+        (end - start).as_millis()
+    );
 
     Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
@@ -102,7 +116,10 @@ async fn import_fast_init_impl(
 
     let end = Instant::now();
 
-    info!("fast-init import took {} milliseconds", (end - start).as_millis());
+    info!(
+        "fast-init import took {} milliseconds",
+        (end - start).as_millis()
+    );
     Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 
