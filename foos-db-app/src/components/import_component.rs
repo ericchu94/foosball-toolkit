@@ -1,8 +1,7 @@
 use futures::{stream, StreamExt};
 use js_sys::Uint8Array;
-use rxrust::prelude::*;
-use rxrust::scheduler::LocalSpawner;
 use wasm_bindgen::JsCast;
+use wasm_bindgen_futures::spawn_local;
 use wasm_streams::ReadableStream;
 use web_sys::{File, HtmlInputElement};
 use yew::prelude::*;
@@ -21,6 +20,42 @@ fn get_url_for_import(file_name: String) -> String {
     };
 
     format!("{BASE_URL}/import{suffix}")
+}
+
+async fn upload_files(files: Vec<File>, status: UseStateHandle<String>) {
+    for f in files {
+        upload_file(f, status.clone()).await;
+    }
+}
+
+async fn upload_file(f: File, status: UseStateHandle<String>) {
+    let file_name = f.name();
+    status.set(format!("Reading {file_name}"));
+    let readable_stream = ReadableStream::from_raw(
+        f.stream()
+            .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
+    );
+    let data = readable_stream
+        .into_stream()
+        .map(Result::unwrap)
+        .map(|value| value.unchecked_into::<Uint8Array>())
+        .map(|arr| arr.to_vec())
+        .flat_map(stream::iter)
+        .collect::<Vec<u8>>()
+        .await;
+    let status = status.clone();
+    status.set(format!("Uploading {file_name}"));
+    let part = reqwest::multipart::Part::bytes(data).file_name(file_name.clone());
+    let form = reqwest::multipart::Form::new().part("file", part);
+    let client = reqwest::Client::new();
+    let response = client
+        .post(get_url_for_import(f.name()))
+        .multipart(form)
+        .send()
+        .await
+        .unwrap();
+    let code = response.status();
+    status.set(format!("Uploaded {file_name}, status: {code}"));
 }
 
 #[function_component]
@@ -70,46 +105,7 @@ pub fn ImportComponent() -> Html {
                 files.swap(idx, 0);
             }
 
-            let status = status.clone();
-            let status2 = status.clone();
-
-            observable::from_iter(files)
-                .flat_map(move |f| {
-                    let file_name = f.name();
-                    status.set(format!("Reading {file_name}"));
-                    let readable_stream = ReadableStream::from_raw(
-                        f.stream()
-                            .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
-                    );
-                    let data = readable_stream
-                        .into_stream()
-                        .map(Result::unwrap)
-                        .map(|value| value.unchecked_into::<Uint8Array>())
-                        .map(|arr| arr.to_vec())
-                        .flat_map(stream::iter)
-                        .collect::<Vec<u8>>();
-                    let status = status.clone();
-                    let file_name2 = f.name();
-                    observable::from_future(data, LocalSpawner {})
-                        .flat_map(move |data| {
-                            status.set(format!("Uploading {file_name}"));
-                            let part = reqwest::multipart::Part::bytes(data).file_name(file_name.clone());
-                            let form = reqwest::multipart::Form::new().part("file", part);
-                            let client = reqwest::Client::new();
-                            observable::from_future(
-                                client
-                                    .post(get_url_for_import(f.name()))
-                                    .multipart(form)
-                                    .send(),
-                                LocalSpawner {},
-                            )
-                        })
-                        .map(Result::unwrap)
-                        .map(move |response| (file_name2.clone(), response.status()))
-                })
-                .subscribe(move |(file_name, code)| {
-                    status2.set(format!("Uploaded {file_name}, status: {code}"));
-                });
+            spawn_local(upload_files(files, status.clone()));
         })
     };
 
