@@ -35,7 +35,7 @@ pub fn PlayerManagement() -> Html {
     }
 
     let options = players.iter().map(|p| html! {
-        <option value={p.id.to_string()}>{format!("{} {} {}", p.id, p.first_name, p.last_name)}</option>
+        <option value={p.id.to_string()}>{format!("{} {} ({})", p.first_name, p.last_name, p.id)}</option>
     }).collect::<Html>();
 
     let onchange = {

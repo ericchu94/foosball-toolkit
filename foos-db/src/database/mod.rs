@@ -30,7 +30,7 @@ impl Database {
     }
 
     pub async fn get_players(&self) -> Result<Vec<Player>> {
-        let players = query_as!(Player, "SELECT * FROM player ORDER BY id ASC")
+        let players = query_as!(Player, "SELECT * FROM player ORDER BY first_name, last_name, id")
             .fetch_all(&self.pool)
             .await?;
 
