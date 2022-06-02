@@ -40,6 +40,24 @@ impl Database {
         Ok(players)
     }
 
+    pub async fn get_players_by_tournament_id(&self, tournament_id: i32) -> Result<Vec<Player>> {
+        let players = query_as!(
+            Player,
+            "
+            select distinct p.* from match m
+            join player_match pm on m.id = pm.match_id
+            join player p on p.id = pm.player_id
+            where m.tournament_id = $1
+            order by first_name, last_name, id
+            ",
+            tournament_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(players)
+    }
+
     pub async fn create_player(&self, player: Player) -> Result<()> {
         query!(
             "INSERT INTO player (first_name, last_name) VALUES ($1, $2)",

@@ -10,7 +10,6 @@ mod top_players;
 mod home;
 mod player_component;
 mod players;
-mod player_management;
 mod management;
 
 pub use app::*;
@@ -25,5 +24,4 @@ pub use top_players::*;
 pub use home::*;
 pub use player_component::*;
 pub use players::*;
-pub use player_management::*;
 pub use management::*;

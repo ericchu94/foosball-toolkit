@@ -86,7 +86,7 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
                 <option value="" selected={true}>{"Merge into"}</option>
                 {options.clone()}
             </select>
-            <button class="mx-1" disabled={to.is_empty()} onclick={on_merge}>{"Merge"}</button>
+            <button class="mx-1" disabled={to.is_empty() || *to == p.id.to_string()} onclick={on_merge}>{"Merge"}</button>
         </li>
     }
 }

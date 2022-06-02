@@ -1,15 +1,25 @@
 use actix_web::{
     get, post, put,
-    web::{self, Data, Json, Path, ServiceConfig},
+    web::{self, Data, Json, Path, ServiceConfig, Query},
     HttpResponse, Responder, Result,
 };
 use serde::Deserialize;
 
 use crate::{database::Database, models::Player, rating::RatingService};
 
+#[derive(Deserialize)]
+struct GetPlayersQuery {
+    tournament_id: Option<i32>,
+}
+
 #[get("")]
-async fn get_players(database: Data<Database>) -> Result<impl Responder> {
-    Ok(Json(database.get_players().await?))
+async fn get_players(database: Data<Database>, query: Query<GetPlayersQuery>) -> Result<impl Responder> {
+    let players = if let Some(tournament_id) = query.tournament_id {
+        database.get_players_by_tournament_id(tournament_id).await?
+    } else {
+        database.get_players().await?
+    };
+    Ok(Json(players))
 }
 
 #[get("/{id}")]

@@ -40,7 +40,6 @@ fn switch(routes: Route) -> Html {
                 },
                 Route::Management => html! { <Management /> },
                 Route::TournamentManagement { id } => html! { <TournamentManagement {id} /> },
-                Route::PlayerManagement => html! { <PlayerManagement /> },
                 _ => html! { <h1>{ "404" }</h1> },
             }}
         </>

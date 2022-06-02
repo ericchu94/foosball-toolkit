@@ -4,6 +4,7 @@ use yew::prelude::*;
 use crate::{
     hooks::{use_foos_db_client, use_input},
     models::Tournament,
+    components::PlayerManagement,
 };
 
 #[derive(Properties, PartialEq)]
@@ -57,8 +58,13 @@ pub fn TournamentManagement(props: &TournamentManagementProperties) -> Html {
 
     html! {
         <>
-            <input class="mx-1" type="text" placeholder="Tournament Name" value={(*tournament_name).clone()} oninput={tournament_name_on_input} />
-            <button class="mx-1" onclick={on_rename} disabled={(*tournament_name) == tournament.name}>{"Rename"}</button>
+            <div class="row">
+                <input class="mx-1" type="text" placeholder="Tournament Name" value={(*tournament_name).clone()} oninput={tournament_name_on_input} />
+                <button class="mx-1" onclick={on_rename} disabled={(*tournament_name) == tournament.name}>{"Rename"}</button>
+            </div>
+            <div class="row">
+                <PlayerManagement tournament_id={id} />
+            </div>
         </>
     }
 }
