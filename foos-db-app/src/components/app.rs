@@ -48,7 +48,7 @@ pub fn App() -> Html {
                     <Switch<Route> render={switch} />
                 </BrowserRouter>
             </div>
-            <script src="assets/bootstrap.bundle.js"></script>
+            <script src="/assets/bootstrap.bundle.js"></script>
         </>
     }
 }
