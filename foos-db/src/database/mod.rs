@@ -30,9 +30,12 @@ impl Database {
     }
 
     pub async fn get_players(&self) -> Result<Vec<Player>> {
-        let players = query_as!(Player, "SELECT * FROM player ORDER BY first_name, last_name, id")
-            .fetch_all(&self.pool)
-            .await?;
+        let players = query_as!(
+            Player,
+            "SELECT * FROM player ORDER BY first_name, last_name, id"
+        )
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(players)
     }
@@ -405,6 +408,19 @@ impl Database {
             .await?;
 
         Ok(player)
+    }
+
+    pub async fn update_tournament(&self, tournament: Tournament) -> Result<()> {
+        query!(
+            "UPDATE tournament SET name = $1, source = $2 WHERE id = $3",
+            tournament.name,
+            tournament.source,
+            tournament.id
+        )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn update_player(&self, player: Player) -> Result<()> {

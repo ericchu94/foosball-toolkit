@@ -64,6 +64,17 @@ impl FoosDbClient {
             .await?;
         Ok(tournaments)
     }
+
+    pub async fn put_tournament(&self, tournament: &Tournament) -> Result<()> {
+        self.client
+            .put(format!("{}/tournament/{}", self.base_url, tournament.id))
+            .json(tournament)
+            .send()
+            .await?
+            .error_for_status()?;
+
+        Ok(())
+    }
 }
 
 impl PartialEq for FoosDbClient {

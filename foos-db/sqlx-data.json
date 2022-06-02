@@ -59,36 +59,6 @@
     },
     "query": "SELECT * FROM rating WHERE player_id = $1 AND match_id = $2"
   },
-  "1cd6971890bd327c596a83cba214edaf32d8ec10ed20e6fa839771deb5ec5627": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "first_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "last_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "SELECT * FROM player ORDER BY id ASC"
-  },
   "20a2bb307b53a88062743b8624db24738a33bbc78261b395af2f0898871bf935": {
     "describe": {
       "columns": [
@@ -161,15 +131,15 @@
         }
       ],
       "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
       ],
       "parameters": {
         "Left": [
@@ -467,6 +437,20 @@
     },
     "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2)"
   },
+  "5916dd4c4fde8594185619e1499fda7f707021566b1e62767400198e6a3315a3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE tournament SET name = $1, source = $2 WHERE id = $3"
+  },
   "690415a543e09ec2086f933c17c567ea37d705bc0fc9867cfc48e5fe5c16c261": {
     "describe": {
       "columns": [
@@ -636,6 +620,38 @@
     },
     "query": "SELECT * FROM player_match WHERE match_id = ANY($1)"
   },
+  "86309680137f6ec5b87c6959762bf081839e1f80870b5defebc90f95bb619b74": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n            select distinct p.* from match m\n            join player_match pm on m.id = pm.match_id \n            join player p on p.id = pm.player_id \n            where m.tournament_id = $1\n            order by first_name, last_name, id\n            "
+  },
   "8bda24c1160f9129f4a4c22303b5012180b2b8ebb23bc596007d8531469673b7": {
     "describe": {
       "columns": [
@@ -698,6 +714,36 @@
       }
     },
     "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2"
+  },
+  "9578d7553c656a28e9e9d49feeb1dbfaf521a30958b86707a0187c5ced2447fa": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM player ORDER BY first_name, last_name, id"
   },
   "9ce42a2dc1866b6e8b0764ac02184b76498432be8ed0831c6c9cfa9b05575d3b": {
     "describe": {
