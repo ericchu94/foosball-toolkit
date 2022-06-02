@@ -1,4 +1,3 @@
-mod use_tournament;
 mod use_player_matches;
 pub mod use_matches;
 mod use_rating;
@@ -8,7 +7,6 @@ mod use_match_datas;
 mod use_players;
 mod use_foos_db_client;
 
-pub use use_tournament::*;
 pub use use_player_matches::*;
 pub use use_matches::use_matches;
 pub use use_rating::*;

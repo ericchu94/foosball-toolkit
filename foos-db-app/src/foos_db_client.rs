@@ -52,6 +52,18 @@ impl FoosDbClient {
             .await?;
         Ok(tournament)
     }
+
+    pub async fn tournaments(&self) -> Result<Vec<Tournament>> {
+        let tournaments = self
+            .client
+            .get(format!("{}/tournament", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok(tournaments)
+    }
 }
 
 impl PartialEq for FoosDbClient {
