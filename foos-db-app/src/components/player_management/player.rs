@@ -1,25 +1,16 @@
 use serde::Serialize;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::models::Player;
 
-use crate::hooks::BASE_URL;
+use crate::hooks::{BASE_URL, use_input};
 
 #[derive(Properties, PartialEq)]
 pub struct PlayerProps {
     pub player: Player,
     pub options: Html,
     pub onchange: Callback<()>,
-}
-
-fn create_input_callback(handle: &UseStateHandle<String>) -> Callback<InputEvent> {
-    let handle = handle.clone();
-    Callback::from(move |e: InputEvent| {
-        let target = e.target_unchecked_into::<HtmlInputElement>();
-        handle.set(target.value());
-    })
 }
 
 #[derive(Serialize)]
@@ -34,13 +25,9 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
     let options = &props.options;
     let onchange = props.onchange.clone();
 
-    let first_name = use_state(|| p.first_name.clone());
-    let last_name = use_state(|| p.last_name.clone());
-    let to = use_state(String::new);
-
-    let first_name_on_input = create_input_callback(&first_name);
-    let last_name_on_input = create_input_callback(&last_name);
-    let merge_on_input = create_input_callback(&to);
+    let (first_name, first_name_on_input) = use_input(|| p.first_name.clone());
+    let (last_name, last_name_on_input) = use_input(|| p.last_name.clone());
+    let (to, to_on_input) = use_input(String::new);
 
     let on_rename = {
         let first_name = first_name.clone();
@@ -95,7 +82,7 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
             <input class="mx-1" type="text" value={(*first_name).clone()} placeholder="First Name" oninput={first_name_on_input} />
             <input class="mx-1" type="text" value={(*last_name).clone()} placeholder="Last Name" oninput={last_name_on_input} />
             <button class="mx-1" onclick={on_rename}>{"Rename"}</button>
-            <select class="mx-1" type="select" oninput={merge_on_input}>
+            <select class="mx-1" type="select" oninput={to_on_input}>
                 <option value="" selected={true}>{"Merge into"}</option>
                 {options.clone()}
             </select>
