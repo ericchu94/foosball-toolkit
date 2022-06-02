@@ -40,9 +40,15 @@ struct PlayerMerge {
 }
 
 #[post("/merge")]
-async fn merge(database: Data<Database>, merge: Json<PlayerMerge>) -> Result<impl Responder> {
+async fn merge(database: Data<Database>, merge: Json<PlayerMerge>, rating_service: Data<RatingService>) -> Result<impl Responder> {
     let merge = merge.0;
+
+    if merge.from == merge.to {
+        return Ok(HttpResponse::BadRequest());
+    }
+
     database.merge_and_delete_player(merge.from, merge.to).await?;
+    rating_service.recompute_all().await?;
 
     Ok(HttpResponse::Ok())
 }
