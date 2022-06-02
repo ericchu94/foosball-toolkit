@@ -1,7 +1,7 @@
 use reqwest::Client;
 use thiserror::Error;
 
-use crate::models::MatchData;
+use crate::models::*;
 
 type Result<T> = std::result::Result<T, FoosDbClientError>;
 
@@ -35,9 +35,22 @@ impl FoosDbClient {
             ))
             .send()
             .await?
+            .error_for_status()?
             .json()
             .await?;
         Ok(match_datas)
+    }
+
+    pub async fn tournament(&self, id: i32) -> Result<Tournament> {
+        let tournament = self
+            .client
+            .get(format!("{}/tournament/{id}", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok(tournament)
     }
 }
 

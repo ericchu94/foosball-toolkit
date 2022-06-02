@@ -1,6 +1,5 @@
 use super::MatchComponent;
-use crate::foos_db_client::FoosDbClient;
-use crate::hooks::get_match_datas_observable;
+use crate::hooks::{get_match_datas_observable, use_foos_db_client};
 use crate::models::*;
 use rxrust::prelude::*;
 use yew::prelude::*;
@@ -19,7 +18,7 @@ pub fn Matches() -> Html {
         })
     };
 
-    let client = use_context::<FoosDbClient>().unwrap();
+    let client = use_foos_db_client();
 
     {
         let match_datas = match_datas.clone();

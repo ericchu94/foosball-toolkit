@@ -6,6 +6,8 @@ use rxrust::scheduler::LocalSpawner;
 use crate::foos_db_client::FoosDbClient;
 use crate::models::*;
 
+use super::use_foos_db_client;
+
 type O<N: FnMut(Vec<MatchData>) + 'static> =
     impl Observable<Item = Vec<MatchData>> + SubscribeNext<'static, N>;
 
@@ -23,7 +25,7 @@ pub fn get_match_datas_observable<N: FnMut(Vec<MatchData>) + 'static>(
 
 #[hook]
 pub fn use_match_datas(limit: i32, offset: i32) -> Vec<MatchData> {
-    let client = use_context::<FoosDbClient>().unwrap();
+    let client = use_foos_db_client();
     let item = use_state(Vec::default);
 
     {
