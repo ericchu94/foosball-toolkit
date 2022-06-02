@@ -1,4 +1,5 @@
 use super::MatchComponent;
+use crate::foos_db_client::FoosDbClient;
 use crate::hooks::get_match_datas_observable;
 use crate::models::*;
 use rxrust::prelude::*;
@@ -18,11 +19,13 @@ pub fn Matches() -> Html {
         })
     };
 
+    let client = use_context::<FoosDbClient>().unwrap();
+
     {
         let match_datas = match_datas.clone();
         use_effect_with_deps(
             move |&offset| {
-                let mut subscription = get_match_datas_observable(limit, offset).subscribe(
+                let mut subscription = get_match_datas_observable(client, limit, offset).subscribe(
                     move |mut new: Vec<MatchData>| {
                         let mut v = (*match_datas).clone();
                         v.append(&mut new);

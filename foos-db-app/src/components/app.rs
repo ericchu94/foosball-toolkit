@@ -2,6 +2,8 @@ use yew::prelude::*;
 
 use super::*;
 
+use crate::foos_db_client::FoosDbClient;
+use crate::hooks::BASE_URL;
 use yew_router::prelude::*;
 
 #[derive(Clone, Routable, PartialEq)]
@@ -41,13 +43,17 @@ fn switch(routes: Route) -> Html {
 
 #[function_component]
 pub fn App() -> Html {
+    let foos_db_client = FoosDbClient::new(BASE_URL);
+
     html! {
         <>
-            <div class="container">
-                <BrowserRouter>
-                    <Switch<Route> render={switch} />
-                </BrowserRouter>
-            </div>
+            <ContextProvider<FoosDbClient> context={foos_db_client}>
+                <div class="container">
+                    <BrowserRouter>
+                        <Switch<Route> render={switch} />
+                    </BrowserRouter>
+                </div>
+            </ContextProvider<FoosDbClient>>
             <script src="/assets/bootstrap.bundle.js"></script>
         </>
     }

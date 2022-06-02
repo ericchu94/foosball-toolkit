@@ -5,7 +5,7 @@ use actix_web::{
 };
 use serde::Deserialize;
 
-use crate::{database::Database, models::Player};
+use crate::{database::Database, models::Player, rating::RatingService};
 
 #[get("")]
 async fn get_players(database: Data<Database>) -> Result<impl Responder> {

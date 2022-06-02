@@ -4,6 +4,7 @@
 mod components;
 mod hooks;
 mod models;
+pub mod foos_db_client;
 
 use components::App;
 
