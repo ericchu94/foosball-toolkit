@@ -44,13 +44,34 @@ impl ResponseError for ImportError {}
 impl ResponseError for RatingServiceError {}
 
 async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
+
+    let start = Instant::now();
     let file = file_payload(payload).await?;
+    let end = Instant::now();
+    info!(
+        "ktool buffer took {} milliseconds",
+        (end - start).as_millis()
+    );
 
+
+    let start = Instant::now();
     let kt = parse(&file)?;
+    let end = Instant::now();
+    info!(
+        "ktool parsing took {} milliseconds",
+        (end - start).as_millis()
+    );
 
+
+    let start = Instant::now();
     import_kt(database, kt).await?;
+    let end = Instant::now();
+    info!(
+        "ktool import took {} milliseconds",
+        (end - start).as_millis()
+    );
 
-    Ok(HttpResponse::Ok())
+    Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 
 async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
