@@ -249,7 +249,11 @@ pub async fn import_fast(
             let r#match = Match {
                 id: 0,
                 tournament_id: Some(tournament.id),
-                timestamp: tm.schedule_end.unwrap_or(PrimitiveDateTime::MAX).assume_timezone(tz).unwrap(),
+                timestamp: tm
+                    .schedule_end
+                    .unwrap_or(PrimitiveDateTime::MAX)
+                    .assume_timezone(tz)
+                    .unwrap(),
                 winner,
             };
 

@@ -1,16 +1,14 @@
-use std::{path::PathBuf, fs};
+use std::{fs, path::PathBuf};
 
 use super::Sink;
 
 pub struct FileSink {
-    path: PathBuf
+    path: PathBuf,
 }
 
 impl FileSink {
     pub fn new<P: Into<PathBuf>>(path: P) -> Self {
-        Self {
-            path: path.into()
-        }
+        Self { path: path.into() }
     }
 }
 

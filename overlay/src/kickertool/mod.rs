@@ -1,17 +1,17 @@
+mod next;
 mod standings;
 mod status;
-mod next;
 
 use std::time::Duration;
 
 use kickertool_data::*;
 use rxrust::prelude::*;
-use yew::prelude::*;
 use web_sys::HtmlInputElement;
+use yew::prelude::*;
 
+use next::Next;
 use standings::Standings;
 use status::Status;
-use next::Next;
 
 async fn get_kickertool_data() -> Option<KickertoolData> {
     reqwest::get("http://localhost:8000/data")

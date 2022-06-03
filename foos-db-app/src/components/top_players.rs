@@ -1,10 +1,9 @@
-use yew::prelude::*;
-use crate::hooks::use_player_datas;
 use super::PlayerComponent;
+use crate::hooks::use_player_datas;
+use yew::prelude::*;
 
 #[function_component]
 pub fn TopPlayers() -> Html {
-
     let player_datas = use_player_datas(10, 0);
 
     html! {

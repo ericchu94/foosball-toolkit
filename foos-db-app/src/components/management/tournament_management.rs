@@ -2,9 +2,9 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::{
+    components::PlayerManagement,
     hooks::{use_foos_db_client, use_input},
     models::Tournament,
-    components::PlayerManagement,
 };
 
 #[derive(Properties, PartialEq)]

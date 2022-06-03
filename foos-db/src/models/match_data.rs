@@ -64,11 +64,13 @@ impl From<MatchDataRow> for MatchData {
 
 impl FromIterator<MatchData> for MatchData {
     fn from_iter<T: IntoIterator<Item = MatchData>>(iter: T) -> Self {
-        iter.into_iter().reduce(|mut a, mut b| {
-            a.team1.append(&mut b.team1);
-            a.team2.append(&mut b.team2);
-            a
-        }).unwrap()
+        iter.into_iter()
+            .reduce(|mut a, mut b| {
+                a.team1.append(&mut b.team1);
+                a.team2.append(&mut b.team2);
+                a
+            })
+            .unwrap()
     }
 }
 

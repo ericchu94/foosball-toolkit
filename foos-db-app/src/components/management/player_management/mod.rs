@@ -13,12 +13,7 @@ async fn get_players(tournament_id: Option<i32>) -> Vec<Player> {
         url = format!("{url}?tournament_id={id}");
     }
 
-    reqwest::get(url)
-        .await
-        .unwrap()
-        .json()
-        .await
-        .unwrap()
+    reqwest::get(url).await.unwrap().json().await.unwrap()
 }
 
 #[derive(Properties, PartialEq)]
@@ -26,7 +21,11 @@ pub struct PlayerManagementProperties {
     pub tournament_id: i32,
 }
 
-fn retrieve_players(tournament_id: i32, tournament_players: UseStateHandle<Vec<Player>>, players: UseStateHandle<Vec<Player>>) {
+fn retrieve_players(
+    tournament_id: i32,
+    tournament_players: UseStateHandle<Vec<Player>>,
+    players: UseStateHandle<Vec<Player>>,
+) {
     spawn_local(async move {
         let p = get_players(None).await;
         let tp = get_players(Some(tournament_id)).await;
@@ -44,8 +43,12 @@ pub fn PlayerManagement(props: &PlayerManagementProperties) -> Html {
         let players = players.clone();
         let tournament_players = tournament_players.clone();
         use_effect_with_deps(
-            move|_| {
-                retrieve_players(tournament_id.clone(), tournament_players.clone(), players.clone());
+            move |_| {
+                retrieve_players(
+                    tournament_id.clone(),
+                    tournament_players.clone(),
+                    players.clone(),
+                );
 
                 || {}
             },
@@ -60,7 +63,11 @@ pub fn PlayerManagement(props: &PlayerManagementProperties) -> Html {
     let onchange = {
         let tournament_players = tournament_players.clone();
         Callback::from(move |_| {
-            retrieve_players(tournament_id.clone(), tournament_players.clone(), players.clone());
+            retrieve_players(
+                tournament_id.clone(),
+                tournament_players.clone(),
+                players.clone(),
+            );
         })
     };
 

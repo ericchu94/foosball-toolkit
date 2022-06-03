@@ -99,7 +99,10 @@ impl RatingService {
         let before2 = team2_ratings.iter().map(|pair| pair.1).sum::<i32>() as f64
             / team2_ratings.len() as f64;
 
-        let delta = self.calculator.calculate_match(before1, before2, games).round() as i32;
+        let delta = self
+            .calculator
+            .calculate_match(before1, before2, games)
+            .round() as i32;
 
         let ratings = team1_ratings
             .into_iter()

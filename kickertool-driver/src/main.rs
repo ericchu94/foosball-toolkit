@@ -2,8 +2,8 @@
 
 mod kickertool;
 
-mod sources;
 mod sinks;
+mod sources;
 
 use std::io;
 

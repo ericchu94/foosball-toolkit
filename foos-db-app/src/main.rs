@@ -2,9 +2,9 @@
 #![feature(const_option_ext)]
 
 mod components;
+pub mod foos_db_client;
 mod hooks;
 mod models;
-pub mod foos_db_client;
 
 use components::App;
 

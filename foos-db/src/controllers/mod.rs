@@ -2,12 +2,12 @@ use actix_web::web;
 
 mod import;
 mod r#match;
+mod match_data;
 mod player;
+mod player_data;
 mod player_match;
 mod rating;
 mod tournament;
-mod match_data;
-mod player_data;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     player::config(cfg);

@@ -1,6 +1,6 @@
 use actix_web::{
     get,
-    web::{self, Data, Json, ServiceConfig, Query},
+    web::{self, Data, Json, Query, ServiceConfig},
     Responder, Result,
 };
 use serde::Deserialize;

@@ -17,7 +17,8 @@ pub fn PlayerComponent(props: &PlayerComponentProps) -> Html {
         1 => Some("C0C0C0"),
         2 => Some("CD7F32"),
         _ => None,
-    }.map(|color| {
+    }
+    .map(|color| {
         html! {
             <i class="bi-trophy-fill mx-1" style={format!("color: #{color}")}></i>
         }

@@ -26,14 +26,8 @@ mod test {
                 "<registerUserLogins></registerUserLogins>",
                 "<registerUserLogins />",
             )
-            .replace(
-                "<clubsList></clubsList>",
-                "<clubsList />",
-            )
-            .replace(
-                "<originClub></originClub>",
-                "<originClub />",
-            );
+            .replace("<clubsList></clubsList>", "<clubsList />")
+            .replace("<originClub></originClub>", "<originClub />");
 
         let size = 64;
         for (a, b) in input

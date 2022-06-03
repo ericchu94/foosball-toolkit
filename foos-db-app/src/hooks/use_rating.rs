@@ -12,9 +12,7 @@ type O = impl Observable<Item = Rating> + SubscribeNext<'static, N>;
 
 fn get_observable(player_id: i32, match_id: i32) -> O {
     observable::from_future(
-        reqwest::get(format!(
-            "{BASE_URL}/rating/{player_id}?match_id={match_id}"
-        )),
+        reqwest::get(format!("{BASE_URL}/rating/{player_id}?match_id={match_id}")),
         LocalSpawner {},
     )
     .flat_map(observable::from_iter)

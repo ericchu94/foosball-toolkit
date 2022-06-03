@@ -7,7 +7,8 @@ use crate::models::*;
 
 use super::BASE_URL;
 
-type O<N: FnMut(Vec<Match>) + 'static> = impl Observable<Item = Vec<Match>> + SubscribeNext<'static, N>;
+type O<N: FnMut(Vec<Match>) + 'static> =
+    impl Observable<Item = Vec<Match>> + SubscribeNext<'static, N>;
 
 pub fn get_matches_observable<N: FnMut(Vec<Match>) + 'static>(limit: i32, offset: i32) -> O<N> {
     observable::from_future(

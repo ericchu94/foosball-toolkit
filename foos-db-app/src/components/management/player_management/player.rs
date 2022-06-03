@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 use crate::models::Player;
 
-use crate::hooks::{BASE_URL, use_input};
+use crate::hooks::{use_input, BASE_URL};
 
 #[derive(Properties, PartialEq)]
 pub struct PlayerProps {

@@ -1,15 +1,15 @@
 mod r#match;
-mod player_match;
-mod tournament;
-mod player;
-mod rating;
 mod match_data;
+mod player;
 mod player_data;
+mod player_match;
+mod rating;
+mod tournament;
 
-pub use r#match::*;
-pub use player_match::*;
-pub use tournament::*;
-pub use player::*;
-pub use rating::*;
 pub use match_data::*;
+pub use player::*;
 pub use player_data::*;
+pub use player_match::*;
+pub use r#match::*;
+pub use rating::*;
+pub use tournament::*;

@@ -12,9 +12,7 @@ type O = impl Observable<Item = MatchData> + SubscribeNext<'static, N>;
 
 fn get_observable(id: i32) -> O {
     observable::from_future(
-        reqwest::get(format!(
-            "{BASE_URL}/match_data/{id}"
-        )),
+        reqwest::get(format!("{BASE_URL}/match_data/{id}")),
         LocalSpawner {},
     )
     .flat_map(observable::from_iter)

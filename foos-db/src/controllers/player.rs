@@ -1,6 +1,6 @@
 use actix_web::{
     get, post, put,
-    web::{self, Data, Json, Path, ServiceConfig, Query},
+    web::{self, Data, Json, Path, Query, ServiceConfig},
     HttpResponse, Responder, Result,
 };
 use serde::Deserialize;
@@ -13,7 +13,10 @@ struct GetPlayersQuery {
 }
 
 #[get("")]
-async fn get_players(database: Data<Database>, query: Query<GetPlayersQuery>) -> Result<impl Responder> {
+async fn get_players(
+    database: Data<Database>,
+    query: Query<GetPlayersQuery>,
+) -> Result<impl Responder> {
     let players = if let Some(tournament_id) = query.tournament_id {
         database.get_players_by_tournament_id(tournament_id).await?
     } else {
@@ -29,7 +32,11 @@ async fn get_player_by_id(database: Data<Database>, path: Path<i32>) -> Result<i
 }
 
 #[put("/{id}")]
-async fn put_player(database: Data<Database>, path: Path<i32>, player: Json<Player>) -> Result<impl Responder> {
+async fn put_player(
+    database: Data<Database>,
+    path: Path<i32>,
+    player: Json<Player>,
+) -> Result<impl Responder> {
     let id = path.into_inner();
     let mut player = player.0;
     player.id = id;
@@ -50,14 +57,20 @@ struct PlayerMerge {
 }
 
 #[post("/merge")]
-async fn merge(database: Data<Database>, merge: Json<PlayerMerge>, rating_service: Data<RatingService>) -> Result<impl Responder> {
+async fn merge(
+    database: Data<Database>,
+    merge: Json<PlayerMerge>,
+    rating_service: Data<RatingService>,
+) -> Result<impl Responder> {
     let merge = merge.0;
 
     if merge.from == merge.to {
         return Ok(HttpResponse::BadRequest());
     }
 
-    database.merge_and_delete_player(merge.from, merge.to).await?;
+    database
+        .merge_and_delete_player(merge.from, merge.to)
+        .await?;
     rating_service.recompute_all().await?;
 
     Ok(HttpResponse::Ok())
