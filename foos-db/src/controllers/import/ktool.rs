@@ -1,4 +1,4 @@
-use std::iter;
+use std::{collections::HashSet, iter};
 
 use actix_web::web::Data;
 use actix_web::Result;
@@ -39,7 +39,8 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
 
     let get_players_from_team = |team_id: &str| {
         let team = kt.teams.iter().find(|team| team.id == team_id).unwrap();
-        let players = team.players
+        let players = team
+            .players
             .iter()
             .map(|player| get_player(&player.id).name.clone())
             .collect::<Vec<String>>();
@@ -49,7 +50,12 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
         }
 
         // Try to get players from team name
-        team.name.as_deref().unwrap_or_default().split('/').map(|p| p.trim().to_owned()).collect::<Vec<String>>()
+        team.name
+            .as_deref()
+            .unwrap_or_default()
+            .split('/')
+            .map(|p| p.trim().to_owned())
+            .collect::<Vec<String>>()
     };
 
     let get_games = |play: &ktool::Play| {
@@ -69,64 +75,114 @@ pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Resul
             .collect::<Vec<Game>>()
     };
 
-    let mut all_games = vec![];
+    let players = plays
+        .iter()
+        .flat_map(|play| {
+            let t1 = play.team1.as_ref().unwrap();
+            let t2 = play.team2.as_ref().unwrap();
+            let players1 = get_players_from_team(&t1.id);
+            let players2 = get_players_from_team(&t2.id);
 
-    for play in plays {
-        let t1 = play.team1.as_ref().unwrap();
-        let t2 = play.team2.as_ref().unwrap();
-        let players1 = get_players_from_team(&t1.id);
-        let players2 = get_players_from_team(&t2.id);
-        let winner = get_winner(play);
+            players1.into_iter().chain(players2.into_iter())
+        })
+        .map(|first_name| Player {
+            first_name,
+            ..Player::default()
+        })
+        .collect::<Vec<Player>>();
 
-        let r#match = Match {
-            id: 0,
-            tournament_id: Some(tournament.id),
-            timestamp: OffsetDateTime::from_unix_timestamp(play.time_end.unwrap() as i64 / 1000)
+    let names = players
+        .iter()
+        .map(|p| (p.first_name.as_str(), p.last_name.as_str()))
+        .collect::<HashSet<(&str, &str)>>();
+
+    database.create_players(&players).await?;
+    let players = database.get_players_by_names(names).await?;
+
+    let (matches, mut games, mut player_matches) = plays
+        .into_iter()
+        .map(|play| {
+            let t1 = play.team1.as_ref().unwrap();
+            let t2 = play.team2.as_ref().unwrap();
+            let players1 = get_players_from_team(&t1.id);
+            let players2 = get_players_from_team(&t2.id);
+            let winner = get_winner(play);
+
+            let r#match = Match {
+                id: 0,
+                tournament_id: Some(tournament.id),
+                timestamp: OffsetDateTime::from_unix_timestamp(
+                    play.time_end.unwrap() as i64 / 1000,
+                )
                 .unwrap(),
-            winner,
-        };
+                winner,
+            };
 
-        let mut games = get_games(play);
+            let games = get_games(play);
 
-        info!(
-            "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
-            play.time_end,
-            players1,
-            players2,
-            winner,
-            games.iter().map(|g| g.to_string()).collect::<Vec<String>>()
+            info!(
+                "{:?} {:?} vs {:?}. Winner: {:?}, Games: {:?}",
+                play.time_end,
+                players1,
+                players2,
+                winner,
+                games.iter().map(|g| g.to_string()).collect::<Vec<String>>()
+            );
+
+            let team1 = players1
+                .into_iter()
+                .map(|p| players[&(p, String::new())].id)
+                .collect::<Vec<i32>>();
+
+            let team2 = players2
+                .into_iter()
+                .map(|p| players[&(p, String::new())].id)
+                .collect::<Vec<i32>>();
+
+            let player_matches = team1
+                .into_iter()
+                .map(|id| (id, Team::Team1))
+                .chain(team2.into_iter().map(|id| (id, Team::Team2)))
+                .map(|(player_id, team)| PlayerMatch {
+                    player_id,
+                    team,
+                    match_id: 0,
+                })
+                .collect::<Vec<PlayerMatch>>();
+
+            (r#match, games, player_matches)
+        })
+        .fold(
+            (vec![], vec![], vec![]),
+            |(mut matches, mut games, mut player_matches), (m, g, pm)| {
+                matches.push(m);
+                games.push(g);
+                player_matches.push(pm);
+                (matches, games, player_matches)
+            },
         );
 
-        let team1 = players1
-            .into_iter()
-            .map(|p| Player {
-                id: 0,
-                first_name: p,
-                last_name: String::new(),
-            })
-            .collect::<Vec<Player>>();
+    let matches = database.create_matches(&matches).await?;
 
-        let team2 = players2
-            .into_iter()
-            .map(|p| Player {
-                id: 0,
-                first_name: p,
-                last_name: String::new(),
-            })
-            .collect::<Vec<Player>>();
-
-        let r#match = database
-            .create_match_and_players(r#match, team1, team2)
-            .await?;
-
-        for g in games.iter_mut() {
-            g.match_id = r#match.id;
-        }
-
-        all_games.append(&mut games);
+    for i in 0..matches.len() {
+        let match_id = matches[i].id;
+        games[i].iter_mut().for_each(|g| g.match_id = match_id);
+        player_matches[i]
+            .iter_mut()
+            .for_each(|pm| pm.match_id = match_id);
     }
 
-    database.create_games(all_games).await?;
+    database
+        .create_games(games.into_iter().flatten().collect())
+        .await?;
+    database
+        .create_player_matches(
+            &player_matches
+                .into_iter()
+                .flatten()
+                .collect::<Vec<PlayerMatch>>(),
+        )
+        .await?;
 
     Ok(())
 }
