@@ -59,11 +59,16 @@ pub fn TournamentManagement(props: &TournamentManagementProperties) -> Html {
     html! {
         <>
             <div class="row">
-                <input class="mx-1" type="text" placeholder="Tournament Name" value={(*tournament_name).clone()} oninput={tournament_name_on_input} />
-                <button class="mx-1" onclick={on_rename} disabled={(*tournament_name) == tournament.name}>{"Rename"}</button>
+                <div class="col input-group mb-1">
+                    <input class="form-control" type="text" placeholder="Tournament Name" value={(*tournament_name).clone()} oninput={tournament_name_on_input} />
+                    <button class="btn" onclick={on_rename} disabled={(*tournament_name) == tournament.name}>{"Rename"}</button>
+                </div>
             </div>
             <div class="row">
                 <PlayerManagement tournament_id={id} />
+            </div>
+            <div class="row">
+                <a href="#">{"Download raw"}</a>
             </div>
         </>
     }

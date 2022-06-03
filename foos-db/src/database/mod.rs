@@ -542,4 +542,21 @@ impl Database {
 
         Ok(())
     }
+
+    pub async fn create_import(&self, import: Import) -> Result<Import> {
+        Ok(query_as!(
+            Import,
+            "INSERT INTO import (file, file_name) VALUES ($1, $2) RETURNING *",
+            import.file,
+            import.file_name,
+        )
+        .fetch_one(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_import(&self, id: i32) -> Result<Import> {
+        Ok(query_as!(Import, "SELECT * FROM import WHERE id = $1", id,)
+            .fetch_one(&self.pool)
+            .await?)
+    }
 }

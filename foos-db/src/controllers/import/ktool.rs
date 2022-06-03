@@ -7,7 +7,11 @@ use time::OffsetDateTime;
 
 use crate::{database::Database, models::*};
 
-pub async fn import_kt(database: Data<Database>, kt: ktool::Tournament) -> Result<()> {
+pub async fn import_kt(
+    database: Data<Database>,
+    kt: ktool::Tournament,
+    import_id: i32,
+) -> Result<()> {
     let tournament = Tournament {
         name: kt.name,
         source: String::from("kickertool"),

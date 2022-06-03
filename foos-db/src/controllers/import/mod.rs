@@ -5,8 +5,12 @@ use std::time::Instant;
 
 use actix_multipart::{Multipart, MultipartError};
 use actix_web::{
+    get,
+    http::header::{
+        self, Charset, ContentDisposition, ContentType, DispositionParam, ExtendedValue,
+    },
     post,
-    web::{self, Data, ServiceConfig},
+    web::{self, Data, Path, ServiceConfig},
     HttpResponse, Responder, ResponseError, Result,
 };
 use futures::{future, stream, StreamExt, TryStreamExt};
@@ -16,6 +20,7 @@ use zip::result::ZipError;
 use crate::{
     controllers::import::ktool::{import_kt, parse},
     database::{Database, DatabaseError},
+    models::Import,
     rating::{RatingService, RatingServiceError},
 };
 
@@ -44,15 +49,13 @@ impl ResponseError for ImportError {}
 impl ResponseError for RatingServiceError {}
 
 async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
-
     let start = Instant::now();
-    let file = file_payload(payload).await?;
+    let (file_name, file) = parse_payload(payload).await?;
     let end = Instant::now();
     info!(
         "ktool buffer took {} milliseconds",
         (end - start).as_millis()
     );
-
 
     let start = Instant::now();
     let kt = parse(&file)?;
@@ -62,9 +65,17 @@ async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Resu
         (end - start).as_millis()
     );
 
+    let import_id = database
+        .create_import(Import {
+            file_name,
+            file,
+            ..Import::default()
+        })
+        .await?
+        .id;
 
     let start = Instant::now();
-    import_kt(database, kt).await?;
+    import_kt(database, kt, import_id).await?;
     let end = Instant::now();
     info!(
         "ktool import took {} milliseconds",
@@ -76,7 +87,7 @@ async fn import_ktool_impl(payload: Multipart, database: Data<Database>) -> Resu
 
 async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Result<impl Responder> {
     let start = Instant::now();
-    let file = file_payload(payload).await?;
+    let (file_name, file) = parse_payload(payload).await?;
     let end = Instant::now();
     info!(
         "fast buffer took {} milliseconds",
@@ -91,8 +102,17 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
         (end - start).as_millis()
     );
 
+    let import_id = database
+        .create_import(Import {
+            file_name,
+            file,
+            ..Import::default()
+        })
+        .await?
+        .id;
+
     let start = Instant::now();
-    fast::import_fast(database, fast).await?;
+    fast::import_fast(database, fast, import_id).await?;
     let end = Instant::now();
     info!(
         "fast import took {} milliseconds",
@@ -102,18 +122,23 @@ async fn import_fast_impl(payload: Multipart, database: Data<Database>) -> Resul
     Ok(format!("{} milliseconds", (end - start).as_millis()))
 }
 
-async fn file_payload(payload: Multipart) -> ImportResult<Vec<u8>> {
+async fn parse_payload(payload: Multipart) -> ImportResult<(String, Vec<u8>)> {
     Box::pin(
         payload
             .map_err(ImportError::from)
             .and_then(|field| async {
                 let name = field.name().to_owned();
+                let file_name = field
+                    .content_disposition()
+                    .get_filename()
+                    .unwrap()
+                    .to_owned();
                 let value = field
                     .map_ok(|b| stream::iter(b).map(ImportResult::Ok))
                     .try_flatten()
                     .try_collect::<Vec<u8>>()
                     .await?;
-                Ok((name, value))
+                Ok((name, (file_name, value)))
             })
             .try_filter(|(name, _)| future::ready(name == "file"))
             .map_ok(|(_, data)| data),
@@ -127,9 +152,18 @@ async fn import_fast_init_impl(
     payload: Multipart,
     database: Data<Database>,
 ) -> Result<impl Responder> {
-    let file = file_payload(payload).await?;
+    let (file_name, file) = parse_payload(payload).await?;
 
     let fast = fast::parse(&mut file.as_slice())?;
+
+    let import_id = database
+        .create_import(Import {
+            file_name,
+            file,
+            ..Import::default()
+        })
+        .await?
+        .id;
 
     let start = Instant::now();
 
@@ -187,6 +221,31 @@ async fn import(payload: Multipart, database: Data<Database>) -> Result<impl Res
     import_ktool_impl(payload, database).await
 }
 
+#[get("/{id}")]
+async fn get(database: Data<Database>, path: Path<i32>) -> Result<impl Responder> {
+    let id = path.into_inner();
+
+    let i = database.get_import(id).await?;
+
+    let param = if i.file_name.is_ascii() {
+        DispositionParam::Filename(i.file_name)
+    } else {
+        DispositionParam::FilenameExt(ExtendedValue {
+            charset: Charset::Ext(String::from("UTF-8")),
+            language_tag: None,
+            value: i.file_name.into_bytes(),
+        })
+    };
+
+    Ok(HttpResponse::Ok()
+        .content_type(ContentType::octet_stream())
+        .insert_header(ContentDisposition {
+            disposition: header::DispositionType::Attachment,
+            parameters: vec![param],
+        })
+        .body(i.file))
+}
+
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope("/import")
@@ -194,6 +253,7 @@ pub fn config(cfg: &mut ServiceConfig) {
             .service(import_ktool)
             .service(import_fast)
             .service(import_fast_init)
+            .service(get)
             .service(clear),
     );
 }

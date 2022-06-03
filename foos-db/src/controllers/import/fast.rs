@@ -116,7 +116,11 @@ async fn get_players_by_player_ids(
     Ok(players)
 }
 
-pub async fn import_fast(database: Data<Database>, f: fast::Fast) -> ImportResult<()> {
+pub async fn import_fast(
+    database: Data<Database>,
+    f: fast::Fast,
+    import_id: i32,
+) -> ImportResult<()> {
     let t = &f
         .tournaments
         .as_ref()
