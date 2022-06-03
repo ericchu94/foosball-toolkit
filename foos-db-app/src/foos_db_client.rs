@@ -75,6 +75,10 @@ impl FoosDbClient {
 
         Ok(())
     }
+
+    pub fn import(&self, id: i32) -> String {
+        format!("{}/import/{id}", self.base_url)
+    }
 }
 
 impl PartialEq for FoosDbClient {

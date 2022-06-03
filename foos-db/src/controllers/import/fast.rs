@@ -130,6 +130,7 @@ pub async fn import_fast(
     let tournament = Tournament {
         name: t.name.clone(),
         source: String::from("fast"),
+        import_id,
         ..Default::default()
     };
     let tournament = database.get_or_create_tournament(tournament).await?;

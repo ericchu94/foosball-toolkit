@@ -7,4 +7,5 @@ pub struct Tournament {
     pub name: String,
     #[serde(default)]
     pub source: String,
+    pub import_id: i32,
 }

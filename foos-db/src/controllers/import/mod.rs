@@ -156,7 +156,7 @@ async fn import_fast_init_impl(
 
     let fast = fast::parse(&mut file.as_slice())?;
 
-    let import_id = database
+    let _ = database
         .create_import(Import {
             file_name,
             file,

@@ -163,9 +163,10 @@ impl Database {
 
     pub async fn create_tournament(&self, tournament: Tournament) -> Result<()> {
         query!(
-            "INSERT INTO tournament (name, source) VALUES ($1, $2)",
+            "INSERT INTO tournament (name, source, import_id) VALUES ($1, $2, $3)",
             tournament.name,
-            tournament.source
+            tournament.source,
+            tournament.import_id,
         )
         .execute(&self.pool)
         .await?;
@@ -175,17 +176,19 @@ impl Database {
 
     pub async fn get_or_create_tournament(&self, tournament: Tournament) -> Result<Tournament> {
         query!(
-            "INSERT INTO tournament (name, source) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            "INSERT INTO tournament (name, source, import_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
             tournament.name,
-            tournament.source
+            tournament.source,
+            tournament.import_id,
         )
         .execute(&self.pool)
         .await?;
         Ok(query_as!(
             Tournament,
-            "SELECT * FROM tournament WHERE name = $1 AND source = $2",
+            "SELECT * FROM tournament WHERE name = $1 AND source = $2 AND import_id = $3",
             tournament.name,
-            tournament.source
+            tournament.source,
+            tournament.import_id,
         )
         .fetch_one(&self.pool)
         .await?)

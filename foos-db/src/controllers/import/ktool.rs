@@ -14,6 +14,7 @@ pub async fn import_kt(
 ) -> Result<()> {
     let tournament = Tournament {
         name: kt.name,
+        import_id,
         source: String::from("kickertool"),
         ..Default::default()
     };

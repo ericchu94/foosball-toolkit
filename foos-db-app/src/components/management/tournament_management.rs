@@ -16,13 +16,15 @@ pub struct TournamentManagementProperties {
 pub fn TournamentManagement(props: &TournamentManagementProperties) -> Html {
     let id = props.id;
 
+    let client = use_foos_db_client();
+
     let tournament = use_state(Tournament::default);
     let (tournament_name, tournament_name_on_input) = use_input(Default::default);
 
     {
         let tournament = tournament.clone();
         let tournament_name = tournament_name.clone();
-        let client = use_foos_db_client();
+        let client = client.clone();
         use_effect_with_deps(
             move |&id| {
                 spawn_local(async move {
@@ -56,6 +58,8 @@ pub fn TournamentManagement(props: &TournamentManagementProperties) -> Html {
         })
     };
 
+    let download_url = client.import(tournament.import_id);
+
     html! {
         <>
             <div class="row">
@@ -68,7 +72,7 @@ pub fn TournamentManagement(props: &TournamentManagementProperties) -> Html {
                 <PlayerManagement tournament_id={id} />
             </div>
             <div class="row">
-                <a href="#">{"Download raw"}</a>
+                <a href={download_url}>{"Download raw"}</a>
             </div>
         </>
     }

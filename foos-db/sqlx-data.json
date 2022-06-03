@@ -213,19 +213,6 @@
     },
     "query": "SELECT * FROM match WHERE NOT EXISTS (SELECT 1 FROM rating WHERE match_id = id) ORDER BY timestamp ASC LIMIT 1"
   },
-  "25bc5c8b35d5f78cc3cd860530164c0bb825d478f9c96ffe2a20d6747a6bdb0f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "INSERT INTO tournament (name, source) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-  },
   "273489a807c13d68d6ee8f819afccb13c586be33b00f492eeede3f462015a24a": {
     "describe": {
       "columns": [],
@@ -383,9 +370,15 @@
           "name": "source",
           "ordinal": 2,
           "type_info": "Text"
+        },
+        {
+          "name": "import_id",
+          "ordinal": 3,
+          "type_info": "Int4"
         }
       ],
       "nullable": [
+        false,
         false,
         false,
         false
@@ -397,6 +390,46 @@
       }
     },
     "query": "SELECT * FROM tournament WHERE id = $1"
+  },
+  "462b8decc55567326cdf7563284aa96e1c34add085d1fc629ebed204ff36d117": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "source",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "import_id",
+          "ordinal": 3,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2 AND import_id = $3"
   },
   "538e7df4bd91b40a896009420e63ab4795d130419e3c9d82af35da6626ca02fe": {
     "describe": {
@@ -624,9 +657,15 @@
           "name": "source",
           "ordinal": 2,
           "type_info": "Text"
+        },
+        {
+          "name": "import_id",
+          "ordinal": 3,
+          "type_info": "Int4"
         }
       ],
       "nullable": [
+        false,
         false,
         false,
         false
@@ -636,39 +675,6 @@
       }
     },
     "query": "SELECT * FROM tournament"
-  },
-  "8c750e4e8191c556694a28f3661fdab1e54ab0380e3b93c52584ecafaf1a2e67": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "source",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT * FROM tournament WHERE name = $1 AND source = $2"
   },
   "9578d7553c656a28e9e9d49feeb1dbfaf521a30958b86707a0187c5ced2447fa": {
     "describe": {
@@ -1005,18 +1011,37 @@
     },
     "query": "SELECT r.player_id, p.first_name, p.last_name, r.after_rating rating FROM player p\n            JOIN rating r ON r.player_id = p.id\n            WHERE p.id = $1\n            ORDER BY r.id DESC\n            LIMIT 1"
   },
-  "c00fecc2df44adfc0140910df926a62eb5cc19868d146b66fcc7841d92f2847f": {
+  "c1c06c9eab29dfeda526eebf31e5183b817c824b52a674e7f4ad25e035d34529": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "file",
+          "ordinal": 1,
+          "type_info": "Bytea"
+        },
+        {
+          "name": "file_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
       "parameters": {
         "Left": [
-          "Text",
-          "Text"
+          "Int4"
         ]
       }
     },
-    "query": "INSERT INTO tournament (name, source) VALUES ($1, $2)"
+    "query": "SELECT * FROM import WHERE id = $1"
   },
   "c7014b7ea4c1da4d5a24af1341d82b0798e8dd0f2bf18d11b3cbab54e4939be7": {
     "describe": {
@@ -1056,6 +1081,67 @@
       }
     },
     "query": "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r\n            JOIN (\n                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p\n                JOIN rating r ON r.player_id = p.id\n                GROUP BY r.player_id, p.first_name, p.last_name\n            ) s ON s.rating_id = r.id AND s.player_id = r.player_id\n            ORDER BY rating DESC, player_id\n            LIMIT $1 OFFSET $2"
+  },
+  "d2a148784a108fd14211ad3a25ffb7f264c4600669f10e070e5d063143f2fcaa": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO tournament (name, source, import_id) VALUES ($1, $2, $3)"
+  },
+  "e918ed2502d9ebf6db68777f0b2d0e9847901780ca64696def7afaf6a12d7027": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO tournament (name, source, import_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING"
+  },
+  "ed085672d6b0ca3c0c47568a93e8258230717077ec9af6b44a0dddf8669639bd": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "file",
+          "ordinal": 1,
+          "type_info": "Bytea"
+        },
+        {
+          "name": "file_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO import (file, file_name) VALUES ($1, $2) RETURNING *"
   },
   "f03ebaaf863155e187dbc1304f4bc48d35f3e8088bfcd0d05664d653c9cd0fc3": {
     "describe": {
