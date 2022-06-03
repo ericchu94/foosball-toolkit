@@ -131,15 +131,15 @@
         }
       ],
       "nullable": [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -323,19 +323,6 @@
       }
     },
     "query": "INSERT INTO fast_player (license, first_name, last_name) SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[])"
-  },
-  "366e289bb8296a771bd937cd1441900abb8b0b62e090586d31e5f8d18bd713ed": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "INSERT INTO player (first_name, last_name) VALUES ($1, $2) ON CONFLICT DO NOTHING"
   },
   "3877c6145ec6719c1581974eb816718b5eff3e2c3877f8631229be6807c36ee6": {
     "describe": {
@@ -620,38 +607,6 @@
     },
     "query": "SELECT * FROM player_match WHERE match_id = ANY($1)"
   },
-  "86309680137f6ec5b87c6959762bf081839e1f80870b5defebc90f95bb619b74": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "first_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "last_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int4"
-        ]
-      }
-    },
-    "query": "\n            select distinct p.* from match m\n            join player_match pm on m.id = pm.match_id \n            join player p on p.id = pm.player_id \n            where m.tournament_id = $1\n            order by first_name, last_name, id\n            "
-  },
   "8bda24c1160f9129f4a4c22303b5012180b2b8ebb23bc596007d8531469673b7": {
     "describe": {
       "columns": [
@@ -878,6 +833,38 @@
     },
     "query": "INSERT INTO game (match_id, score1, score2) SELECT * FROM UNNEST($1::int[], $2::int[], $3::int[])"
   },
+  "add32f48c75928fd6997a962f7c494e7deb84bc3704ba1a340637b087d0692ba": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "first_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "last_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n            select distinct p.* from match m\n            join player_match pm on m.id = pm.match_id\n            join player p on p.id = pm.player_id\n            where m.tournament_id = $1\n            order by first_name, last_name, id\n            "
+  },
   "b14ea0dc593ccfb21f13f14ba80a2d70521d929abc903eeae5788284a08c7ec1": {
     "describe": {
       "columns": [],
@@ -1031,70 +1018,6 @@
     },
     "query": "INSERT INTO tournament (name, source) VALUES ($1, $2)"
   },
-  "c4526af506f96bb1c10cda5587a5a954121fb085ea8a31d3f90a1dc173786598": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "tournament_id",
-          "ordinal": 1,
-          "type_info": "Int4"
-        },
-        {
-          "name": "timestamp",
-          "ordinal": 2,
-          "type_info": "Timestamptz"
-        },
-        {
-          "name": "winner",
-          "ordinal": 3,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "none",
-                  "team1",
-                  "team2",
-                  "draw"
-                ]
-              },
-              "name": "winner"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Timestamptz",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "none",
-                  "team1",
-                  "team2",
-                  "draw"
-                ]
-              },
-              "name": "winner"
-            }
-          }
-        ]
-      }
-    },
-    "query": "INSERT INTO match (tournament_id, timestamp, winner) VALUES ($1, $2, $3) RETURNING *"
-  },
   "c7014b7ea4c1da4d5a24af1341d82b0798e8dd0f2bf18d11b3cbab54e4939be7": {
     "describe": {
       "columns": [
@@ -1133,30 +1056,6 @@
       }
     },
     "query": "SELECT r.player_id, s.first_name, s.last_name, r.after_rating rating FROM rating r\n            JOIN (\n                SELECT MAX(r.id) rating_id, r.player_id, p.first_name, p.last_name FROM player p\n                JOIN rating r ON r.player_id = p.id\n                GROUP BY r.player_id, p.first_name, p.last_name\n            ) s ON s.rating_id = r.id AND s.player_id = r.player_id\n            ORDER BY rating DESC, player_id\n            LIMIT $1 OFFSET $2"
-  },
-  "e83f080cadc59f0b2dd832fb086b73f31f95009cfae367653790ed5fa7604ded": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Int4",
-          "Int4",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "team1",
-                  "team2"
-                ]
-              },
-              "name": "team"
-            }
-          }
-        ]
-      }
-    },
-    "query": "INSERT INTO player_match (player_id, match_id, team) VALUES ($1, $2, $3)"
   },
   "f03ebaaf863155e187dbc1304f4bc48d35f3e8088bfcd0d05664d653c9cd0fc3": {
     "describe": {
@@ -1198,39 +1097,6 @@
       }
     },
     "query": "TRUNCATE match, player_match, player, game, tournament, rating"
-  },
-  "f9ea8063ed4c857a89cfb2f217ff9990d074fc5afe3f18226f6c7398cf802c16": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Int4"
-        },
-        {
-          "name": "first_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "last_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT * FROM player WHERE first_name = $1 AND last_name = $2"
   },
   "fe8c652643257bc59385f79defb13456d0f083f9ed257f8f4496a76769a11965": {
     "describe": {
