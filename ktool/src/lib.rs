@@ -4,7 +4,7 @@ pub use ktool::*;
 
 #[cfg(test)]
 mod test {
-    use std::iter;
+    use std::{fs::read_to_string, iter};
 
     use crate::ktool::{Play, Tournament};
 
@@ -13,6 +13,34 @@ mod test {
         let s = include_str!("05_15_2022.ktool");
         let tournament: Tournament = serde_json::from_str(s).unwrap();
         dbg!(tournament);
+    }
+
+    #[test]
+    fn test3() {
+        let files = [
+            "Beijing 2021-06-11 DYP.ktool",
+            "Beijing 2021-06-12 DYP.ktool",
+            "Beijing 2021 Amateur Doubles.ktool",
+            "Beijing 2021 Goalie Wars.ktool",
+            "Beijing 2021 Mixed Doubles.ktool",
+            "Beijing 2021 Open Doubles.ktool",
+            "Beijing 2021 Open Singles.ktool",
+            "Beijing 2021 Pro Doubles.ktool",
+            "Beijing 2021 Rookie Doubles.ktool",
+            "Beijing 2021 SpeedBall.ktool",
+            "Beijing 2021 Youth Doubles.ktool",
+            "Beijing 2021 Youth Singles.ktool",
+        ];
+
+        for file in files {
+            println!("{file}");
+            let s = read_to_string(format!(
+                "/home/ericchu/Sync/FoosTournaments/Beijing 2021/{file}"
+            ))
+            .unwrap();
+            let tournament: Tournament = serde_json::from_str(&s).unwrap();
+            dbg!(tournament);
+        }
     }
 
     #[test]
@@ -67,7 +95,7 @@ mod test {
                         discipline
                             .sets
                             .iter()
-                            .map(|result| (result.team1, result.team2))
+                            .map(|result| (result.team1.unwrap_or(0), result.team2.unwrap_or(0)))
                             .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1))
                     })
                     .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1));

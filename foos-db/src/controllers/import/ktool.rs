@@ -68,8 +68,8 @@ pub async fn import_kt(
             .iter()
             .flat_map(|d| d.sets.iter())
             .map(|r| {
-                let score1 = r.team1 as i32;
-                let score2 = r.team2 as i32;
+                let score1 = r.team1.unwrap_or(0) as i32;
+                let score2 = r.team2.unwrap_or(0) as i32;
 
                 Game {
                     score1,
@@ -211,7 +211,7 @@ fn get_winner(play: &ktool::Play) -> Winner {
                     discipline
                         .sets
                         .iter()
-                        .map(|result| (result.team1, result.team2))
+                        .map(|result| (result.team1.unwrap_or(0), result.team2.unwrap_or(0)))
                         .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1))
                 })
                 .fold((0, 0), |acc, item| (acc.0 + item.0, acc.1 + item.1));

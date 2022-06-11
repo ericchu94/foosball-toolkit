@@ -18,4 +18,4 @@ pub use use_player_matches::*;
 pub use use_players::*;
 pub use use_rating::*;
 
-pub const BASE_URL: &str = option_env!("BASE_URL").unwrap_or("https://foos-db.herokuapp.com");
+pub const BASE_URL: &str = option_env!("BASE_URL").unwrap_or("http://47.108.135.204:8888");

@@ -66,7 +66,7 @@ pub struct Player {
     pub weight: u32,
     pub start_index: u32,
     pub removed: bool,
-    pub marked_for_removal: bool,
+    pub marked_for_removal: Option<bool>,
     pub deactivated: bool,
 }
 
@@ -93,9 +93,10 @@ pub struct Team {
     #[serde(rename = "_name")]
     pub name: Option<String>,
     pub start_index: u32,
+    #[serde(default)]
     pub players: Vec<PlayerRef>,
     pub removed: bool,
-    pub marked_for_removal: bool,
+    pub marked_for_removal: Option<bool>,
     pub deactivated: bool,
 }
 
@@ -165,8 +166,8 @@ pub struct Result {
     #[serde(rename = "_id")]
     pub id: String,
     pub r#type: String,
-    pub team1: u32,
-    pub team2: u32,
+    pub team1: Option<u32>,
+    pub team2: Option<u32>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -271,8 +272,8 @@ pub struct TableConfig {
 pub struct Sport {
     pub default_options: DefaultOptions,
     pub table_config: HashMap<String, Vec<TableConfig>>,
-    pub has_goals: bool,
-    pub has_fast_entry: bool,
+    pub has_goals: Option<bool>,
+    pub has_fast_entry: Option<bool>,
     pub has_sets: bool,
     pub has_draw: bool,
     pub has_points: bool,
@@ -286,9 +287,9 @@ pub struct Sport {
 #[serde(rename_all = "camelCase")]
 pub struct DefaultOptions {
     pub num_points: u32,
-    pub num_sets: u32,
+    pub num_sets: Option<u32>,
     pub points_win: u32,
     pub points_draw: u32,
     pub draw: bool,
-    pub fast_input: bool,
+    pub fast_input: Option<bool>,
 }
