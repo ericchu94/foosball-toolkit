@@ -7,7 +7,7 @@ use crate::{
     models::Tournament,
 };
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct TournamentManagementProperties {
     pub id: i32,
 }

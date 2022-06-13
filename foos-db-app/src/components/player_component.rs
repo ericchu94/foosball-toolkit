@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::models::*;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct PlayerComponentProps {
     pub player_data: PlayerData,
     pub index: usize,

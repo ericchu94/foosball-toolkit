@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::models::MatchDataPlayer;
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Eq)]
 pub struct PlayerNameProps {
     pub player: MatchDataPlayer,
 }

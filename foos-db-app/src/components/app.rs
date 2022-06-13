@@ -6,7 +6,7 @@ use crate::foos_db_client::FoosDbClient;
 use crate::hooks::BASE_URL;
 use yew_router::prelude::*;
 
-#[derive(Clone, Routable, PartialEq)]
+#[derive(Clone, Routable, PartialEq, Eq)]
 pub enum Route {
     #[at("/")]
     Home,
