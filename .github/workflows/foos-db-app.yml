@@ -29,13 +29,26 @@ jobs:
     - name: Build
       run: trunk build --release
     - name: Create 200.html
-      working-directory: dist
+      working-directory: foos-db-app/dist
       run: cp index.html 200.html
   deploy:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy
-        run: exit 0
-      
+      - name: Publish to foos-db-cn
+        uses: dswistowski/surge-sh-action@v1.0.1
+        with:
+          domain: http://foos-db-cn.ericchu.net
+          # surge.sh login
+          login: ericchu137@live.ca
+          token: ${{ secrets.SURGE_TOKEN }}
+          project: dist
+      - name: Publish to foos-db
+        uses: dswistowski/surge-sh-action@v1.0.1
+        with:
+          domain: http://foos-db.ericchu.net
+          # surge.sh login
+          login: ericchu137@live.ca
+          token: ${{ secrets.SURGE_TOKEN }}
+          project: dist
