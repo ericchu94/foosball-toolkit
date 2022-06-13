@@ -1,5 +1,7 @@
 # foosball-toolkit
 
+![foos-db-app](https://github.com/ericchu94/foosball-toolkit/actions/workflows/foos-db-app.yml/badge.svg)
+
 ## License
 
 Licensed under either of
