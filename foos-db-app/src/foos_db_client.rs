@@ -79,6 +79,28 @@ impl FoosDbClient {
     pub fn import(&self, id: i32) -> String {
         format!("{}/import/{id}", self.base_url)
     }
+
+    pub async fn get_players(&self) -> Result<Vec<Player>> {
+        Ok(self
+            .client
+            .get(format!("{}/player", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    pub async fn get_players_by_tournament_id(&self, tournament_id: i32) -> Result<Vec<PlayerWithTournamentCount>> {
+        Ok(self
+            .client
+            .get(format!("{}/player?tournament_id={tournament_id}", self.base_url))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
 }
 
 impl PartialEq for FoosDbClient {

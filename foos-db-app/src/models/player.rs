@@ -7,3 +7,9 @@ pub struct Player {
     pub first_name: String,
     pub last_name: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+pub struct PlayerWithTournamentCount {
+    pub player: Player,
+    pub tournament_count: i32,
+}

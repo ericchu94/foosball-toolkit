@@ -1,7 +1,7 @@
 use actix_web::{
     get, post, put,
     web::{self, Data, Json, Path, Query, ServiceConfig},
-    HttpResponse, Responder, Result,
+    HttpResponse, Responder, Result, Either,
 };
 use serde::Deserialize;
 
@@ -18,11 +18,11 @@ async fn get_players(
     query: Query<GetPlayersQuery>,
 ) -> Result<impl Responder> {
     let players = if let Some(tournament_id) = query.tournament_id {
-        database.get_players_by_tournament_id(tournament_id).await?
+        Either::Left(Json(database.get_players_by_tournament_id(tournament_id).await?))
     } else {
-        database.get_players().await?
+        Either::Right(Json(database.get_players().await?))
     };
-    Ok(Json(players))
+    Ok(players)
 }
 
 #[get("/{id}")]

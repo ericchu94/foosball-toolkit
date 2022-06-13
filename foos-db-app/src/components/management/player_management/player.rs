@@ -2,13 +2,13 @@ use serde::Serialize;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-use crate::models::Player;
+use crate::models::{Player, PlayerWithTournamentCount};
 
 use crate::hooks::{use_input, BASE_URL};
 
 #[derive(Properties, PartialEq)]
 pub struct PlayerProps {
-    pub player: Player,
+    pub player: PlayerWithTournamentCount,
     pub options: Html,
     pub onchange: Callback<()>,
 }
@@ -25,8 +25,8 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
     let options = &props.options;
     let onchange = props.onchange.clone();
 
-    let (first_name, first_name_on_input) = use_input(|| p.first_name.clone());
-    let (last_name, last_name_on_input) = use_input(|| p.last_name.clone());
+    let (first_name, first_name_on_input) = use_input(|| p.player.first_name.clone());
+    let (last_name, last_name_on_input) = use_input(|| p.player.last_name.clone());
     let (to, to_on_input) = use_input(String::new);
 
     let on_rename = {
@@ -38,7 +38,7 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
             let player = Player {
                 first_name: (*first_name).clone(),
                 last_name: (*last_name).clone(),
-                ..player.clone()
+                ..player.player.clone()
             };
 
             let onchange = onchange.clone();
@@ -57,7 +57,7 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
 
     let on_merge = {
         let to = to.clone();
-        let from = p.id;
+        let from = p.player.id;
         Callback::from(move |_| {
             let to = to.parse::<i32>().unwrap();
             let merge = Merge { to, from };
@@ -78,7 +78,8 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
 
     html! {
         <li class="list-group-item">
-            {p.id}
+            <span class="mx-1">{p.player.id}</span>
+            <span class="mx-1">{format!("[{}]", p.tournament_count)}</span>
             <input class="mx-1" type="text" value={(*first_name).clone()} placeholder="First Name" oninput={first_name_on_input} />
             <input class="mx-1" type="text" value={(*last_name).clone()} placeholder="Last Name" oninput={last_name_on_input} />
             <button class="mx-1" onclick={on_rename}>{"Rename"}</button>
@@ -86,7 +87,7 @@ pub fn PlayerManagementPlayer(props: &PlayerProps) -> Html {
                 <option value="" selected={true}>{"Merge into"}</option>
                 {options.clone()}
             </select>
-            <button class="mx-1" disabled={to.is_empty() || *to == p.id.to_string()} onclick={on_merge}>{"Merge"}</button>
+            <button class="mx-1" disabled={to.is_empty() || *to == p.player.id.to_string()} onclick={on_merge}>{"Merge"}</button>
         </li>
     }
 }

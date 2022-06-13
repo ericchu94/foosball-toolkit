@@ -40,18 +40,34 @@ impl Database {
         Ok(players)
     }
 
-    pub async fn get_players_by_tournament_id(&self, tournament_id: i32) -> Result<Vec<Player>> {
-        let players = query_as!(
-            Player,
+    pub async fn get_players_by_tournament_id(
+        &self,
+        tournament_id: i32,
+    ) -> Result<Vec<PlayerWithTournamentCount>> {
+        let players = query!(
             "
-            select distinct p.* from match m
+            select distinct p.*, (SELECT COUNT(DISTINCT  m.tournament_id) tournament_count FROM player_match pm
+            JOIN match m ON m.id  = pm.match_id
+            WHERE pm.player_id = p.id) tournament_count from match m
             join player_match pm on m.id = pm.match_id
             join player p on p.id = pm.player_id
             where m.tournament_id = $1
-            order by first_name, last_name, id
+            order by first_name, last_name, id;
             ",
             tournament_id
         )
+        .map(|record| {
+            let id = record.id;
+            let first_name = record.first_name;
+            let last_name = record.last_name;
+            let player = Player {
+                id, first_name, last_name,
+            };
+            let tournament_count = record.tournament_count.expect("unable to fetch player tournament count") as i32;
+            PlayerWithTournamentCount {
+                player, tournament_count
+            }
+        })
         .fetch_all(&self.pool)
         .await?;
 
