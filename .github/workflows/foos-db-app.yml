@@ -26,6 +26,15 @@ jobs:
         default: true
     - name: Install trunk
       uses: jetli/trunk-action@v0.1.0
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Build
       run: trunk build --release
     - name: Create 200.html
