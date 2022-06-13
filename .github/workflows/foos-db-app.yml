@@ -43,6 +43,7 @@ jobs:
     - name: Upload dist
       uses: actions/upload-artifact@v3.1.0
       with:
+        name: dist
         path: foos-db-app/dist
   deploy:
     runs-on: ubuntu-latest
@@ -55,6 +56,7 @@ jobs:
       - name: Download dist
         uses: actions/download-artifact@v3.0.0
         with:
+          name: dist
           path: foos-db-app/dist
       - name: find
         run: find
