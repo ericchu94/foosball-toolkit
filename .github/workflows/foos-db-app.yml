@@ -43,7 +43,7 @@ jobs:
           # surge.sh login
           login: ericchu137@live.ca
           token: ${{ secrets.SURGE_TOKEN }}
-          project: dist
+          project: foos-db-app/dist
       - name: Publish to foos-db
         uses: dswistowski/surge-sh-action@v1.0.1
         with:
@@ -51,4 +51,4 @@ jobs:
           # surge.sh login
           login: ericchu137@live.ca
           token: ${{ secrets.SURGE_TOKEN }}
-          project: dist
+          project: foos-db-app/dist
