@@ -11,15 +11,6 @@ use crate::{
 
 use player::PlayerManagementPlayer;
 
-async fn get_players(tournament_id: Option<i32>) -> Vec<Player> {
-    let mut url = format!("{BASE_URL}/player");
-    if let Some(id) = tournament_id {
-        url = format!("{url}?tournament_id={id}");
-    }
-
-    reqwest::get(url).await.unwrap().json().await.unwrap()
-}
-
 #[derive(Properties, PartialEq, Eq)]
 pub struct PlayerManagementProperties {
     pub tournament_id: i32,
